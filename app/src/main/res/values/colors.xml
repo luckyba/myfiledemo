@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="my_file_color_primary_dark">#109e5d</color>
+    <color name="my_file_color_primary">#15b76d</color>
+
+
+
+    <color name="colorRippleEffect">#FF848A89</color>
+    <color name="color_text_selected">#222222</color>
+    <color name="color_text_unselected">#bfc4c9</color>
+
+    <color name="txt_gray">#3b3f44</color>
+    <color name="et_bg_color">#e5e5e5</color>
+    <color name="txt_black">#222</color>
+    <color name="txt_white">#fff</color>
+    <color name="txt_green">#0f0</color>
+    <color name="txt_blue">#2196F3</color>
+
+    <color name="colorBlackTransparent">#aa000000</color>
+    <color name="colorWhiteTransparent">#aaffffff</color>
+    <color name="colorFooterBorderTop">#d9dce0</color>
+
+    <color name="my_file_back_ground_color">#fcfcfc</color>
+    <color name="action_bar_back_ground">#979797</color>
+    <color name="action_bar_text_color">#252525</color>
+    <color name="action_bar_title_text_color">#252525</color>
+    <color name="action_bar_more_button_color">#252525</color>
+    <color name="item_back_ground">#fcfcfc</color>
+</resources>

@@ -1,0 +1,26 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.My_file_demo_NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/my_file_color_primary</item>
+        <item name="colorPrimaryDark">@color/my_file_color_primary_dark</item>
+
+        <item name="android:colorPrimary">@color/my_file_color_primary</item>
+        <item name="android:colorPrimaryDark">@color/my_file_color_primary_dark</item>
+
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+
+        <item name="android:textColor">@color/action_bar_title_text_color</item>
+<!--        background menu color-->
+        <item name="android:itemBackground">@color/item_back_ground</item>
+
+        <!-- Customize your theme here. -->
+
+    </style>
+
+    <style name="Theme.Myfiledemo.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="Theme.Myfiledemo.PopupOverlay" parent="ThemeOverlay.AppCompat.Light"/>
+
+</resources>
