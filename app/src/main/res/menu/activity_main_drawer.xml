@@ -5,16 +5,39 @@
 
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/nav_home"
-            android:icon="@drawable/ic_home"
-            android:title="@string/menu_home" />
+            android:id="@+id/nav_recent"
+            android:icon="@drawable/ic_outline_recent"
+            android:title="@string/menu_recent"/>
         <item
             android:id="@+id/nav_gallery"
             android:icon="@drawable/ic_outline_photo_library_24"
-            android:title="@string/menu_gallery" />
+            android:title="@string/menu_images" />
         <item
-            android:id="@+id/nav_slideshow"
-            android:icon="@drawable/ic_menu_slideshow"
-            android:title="@string/menu_slideshow" />
+            android:id="@+id/nav_videos"
+            android:icon="@drawable/ic_outline_video_library_24"
+            android:title="@string/menu_videos" />
+        <item
+            android:id="@+id/nav_audios"
+            android:icon="@drawable/ic_outline_audiotrack_24"
+            android:title="@string/menu_audio" />
+        <item
+            android:id="@+id/nav_documents"
+            android:icon="@drawable/ic_outline_delete_outline_24"
+            android:title="@string/menu_documents" />
+        <item
+            android:id="@+id/nav_downloads"
+            android:icon="@drawable/ic_outline_file_download_24"
+            android:title="@string/menu_download" />
+    </group>
+
+    <group>
+        <item
+            android:id="@+id/nav_internal_storage"
+            android:icon="@drawable/ic_home"
+            android:title="@string/menu_internal_storage" />
+        <item
+            android:id="@+id/nav_external_storage"
+            android:icon="@drawable/ic_outline_sd_storage_24"
+            android:title="@string/menu_external_storage" />
     </group>
 </menu>
