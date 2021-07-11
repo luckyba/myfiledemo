@@ -1,0 +1,2912 @@
+Index: .idea/gradle.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/gradle.xml	(revision 7b52a715990f8fc0af0cc8820424dd60e107a8f6)
++++ .idea/gradle.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -5,6 +5,7 @@
+     <option name="linkedExternalProjectsSettings">
+       <GradleProjectSettings>
+         <option name="testRunner" value="PLATFORM" />
++        <option name="disableWrapperSourceDistributionNotification" value="true" />
+         <option name="distributionType" value="DEFAULT_WRAPPED" />
+         <option name="externalProjectPath" value="$PROJECT_DIR$" />
+         <option name="gradleJvm" value="1.8" />
+Index: app/build.gradle
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/build.gradle	(revision 7b52a715990f8fc0af0cc8820424dd60e107a8f6)
++++ app/build.gradle	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -40,4 +40,8 @@
+     testImplementation 'junit:junit:4.+'
+     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
+     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
++
++    implementation 'com.github.bumptech.glide:glide:4.9.0'
++    annotationProcessor 'com.github.bumptech.glide:compiler:4.9.0'
++    implementation 'androidx.cardview:cardview:1.0.0'
+ }
+\ No newline at end of file
+Index: app/src/main/java/com/luckyba/myfiledemo/data/model/ImageFolder.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/data/model/ImageFolder.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/java/com/luckyba/myfiledemo/data/model/ImageFolder.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,54 @@
++package com.luckyba.myfiledemo.data.model;
++
++public class ImageFolder {
++
++    private  String path;
++    private  String FolderName;
++    private int numberOfPics = 0;
++    private String firstPic;
++
++    public ImageFolder(){
++
++    }
++
++    public ImageFolder(String path, String folderName) {
++        this.path = path;
++        FolderName = folderName;
++    }
++
++    public String getPath() {
++        return path;
++    }
++
++    public void setPath(String path) {
++        this.path = path;
++    }
++
++    public String getFolderName() {
++        return FolderName;
++    }
++
++    public void setFolderName(String folderName) {
++        FolderName = folderName;
++    }
++
++    public int getNumberOfPics() {
++        return numberOfPics;
++    }
++
++    public void setNumberOfPics(int numberOfPics) {
++        this.numberOfPics = numberOfPics;
++    }
++
++    public void addpics(){
++        this.numberOfPics++;
++    }
++
++    public String getFirstPic() {
++        return firstPic;
++    }
++
++    public void setFirstPic(String firstPic) {
++        this.firstPic = firstPic;
++    }
++}
+Index: app/src/main/java/com/luckyba/myfiledemo/data/repository/MyFileRepository.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/data/repository/MyFileRepository.java	(revision 7b52a715990f8fc0af0cc8820424dd60e107a8f6)
++++ app/src/main/java/com/luckyba/myfiledemo/data/repository/MyFileRepository.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -2,12 +2,16 @@
+ 
+ import android.content.Context;
+ import android.database.Cursor;
++import android.net.Uri;
+ import android.provider.MediaStore;
++import android.util.Log;
+ 
+ import com.luckyba.myfiledemo.data.model.DictionaryProvider;
+ import com.luckyba.myfiledemo.data.model.ExternalStorageFilesModel;
++import com.luckyba.myfiledemo.data.model.ImageFolder;
+ import com.luckyba.myfiledemo.data.model.InternalStorageFilesModel;
+ import com.luckyba.myfiledemo.data.model.MediaFileListModel;
++import com.luckyba.myfiledemo.ui.main.view.viewholder.PictureHolder;
+ 
+ import java.io.File;
+ import java.util.ArrayList;
+@@ -123,4 +127,59 @@
+ 
+         return internalStorageFilesModelList;
+     }
++
++
++    @Override
++    public ArrayList<ImageFolder> getAllFolderPicture(DictionaryProvider dir) {
++        ArrayList<ImageFolder> picFolders = new ArrayList<>();
++        ArrayList<String> picPaths = new ArrayList<>();
++        Cursor cursor = mContext.getContentResolver().query(dir.getUri(), dir.getProjection()
++                , dir.getSelectionClause(), dir.getSelectionArgs(), dir.getSortOrder());
++        try {
++            if (cursor != null) {
++                cursor.moveToFirst();
++            }
++            do{
++                ImageFolder folds = new ImageFolder();
++                String name = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME));
++                String folder = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME));
++                String datapath = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA));
++
++                //String folderpaths =  datapath.replace(name,"");
++                String folderpaths = datapath.substring(0, datapath.lastIndexOf(folder+"/"));
++                folderpaths = folderpaths+folder+"/";
++                if (!picPaths.contains(folderpaths)) {
++                    picPaths.add(folderpaths);
++
++                    folds.setPath(folderpaths);
++                    folds.setFolderName(folder);
++                    folds.setFirstPic(datapath);//if the folder has only one picture this line helps to set it as first so as to avoid blank image in itemview
++                    folds.addpics();
++                    picFolders.add(folds);
++                }else{
++                    for(int i = 0;i<picFolders.size();i++){
++                        if(picFolders.get(i).getPath().equals(folderpaths)){
++                            picFolders.get(i).setFirstPic(datapath);
++                            picFolders.get(i).addpics();
++                        }
++                    }
++                }
++            }while(cursor.moveToNext());
++            cursor.close();
++        } catch (Exception e) {
++            e.printStackTrace();
++        }
++        for(int i = 0;i < picFolders.size();i++){
++            Log.d("picture folders",picFolders.get(i).getFolderName()+" and path = "+picFolders.get(i).getPath()+" "+picFolders.get(i).getNumberOfPics());
++        }
++
++        //reverse order ArrayList
++       /* ArrayList<imageFolder> reverseFolders = new ArrayList<>();
++
++        for(int i = picFolders.size()-1;i > reverseFolders.size()-1;i--){
++            reverseFolders.add(picFolders.get(i));
++        }*/
++
++        return picFolders;
++    }
+ }
+Index: app/src/main/java/com/luckyba/myfiledemo/data/repository/MyFileRes.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/data/repository/MyFileRes.java	(revision 7b52a715990f8fc0af0cc8820424dd60e107a8f6)
++++ app/src/main/java/com/luckyba/myfiledemo/data/repository/MyFileRes.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -4,15 +4,21 @@
+ 
+ import com.luckyba.myfiledemo.data.model.DictionaryProvider;
+ import com.luckyba.myfiledemo.data.model.ExternalStorageFilesModel;
++import com.luckyba.myfiledemo.data.model.ImageFolder;
+ import com.luckyba.myfiledemo.data.model.InternalStorageFilesModel;
+ import com.luckyba.myfiledemo.data.model.MediaFileListModel;
++import com.luckyba.myfiledemo.ui.main.view.viewholder.PictureHolder;
+ 
+ import java.util.ArrayList;
+ import java.util.List;
+ 
+ public interface MyFileRes {
++
++
+     ArrayList<MediaFileListModel> getAllMedia (DictionaryProvider dir);
+ 
++    ArrayList<ImageFolder> getAllFolderPicture (DictionaryProvider dir);
++
+     ArrayList<ExternalStorageFilesModel> getAllExternalFile (String filepath);
+ 
+     ArrayList<InternalStorageFilesModel> getAllInternalFile (String filepath);
+Index: app/src/main/java/com/luckyba/myfiledemo/ui/main/view/AudioFragment.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/ui/main/view/AudioFragment.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/java/com/luckyba/myfiledemo/ui/main/view/AudioFragment.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,117 @@
++package com.luckyba.myfiledemo.ui.main.view;
++
++import android.annotation.TargetApi;
++import android.app.AlertDialog;
++import android.content.DialogInterface;
++import android.content.pm.PackageManager;
++import android.os.Build;
++import android.os.Bundle;
++import android.util.Log;
++import android.view.LayoutInflater;
++import android.view.View;
++import android.view.ViewGroup;
++import android.widget.TextView;
++import android.widget.Toast;
++
++import androidx.annotation.NonNull;
++import androidx.annotation.Nullable;
++import androidx.core.app.ActivityCompat;
++import androidx.fragment.app.Fragment;
++import androidx.lifecycle.Observer;
++import androidx.lifecycle.ViewModelProvider;
++import androidx.recyclerview.widget.DefaultItemAnimator;
++import androidx.recyclerview.widget.LinearLayoutManager;
++import androidx.recyclerview.widget.RecyclerView;
++
++import com.luckyba.myfiledemo.R;
++import com.luckyba.myfiledemo.data.model.InternalStorageFilesModel;
++import com.luckyba.myfiledemo.data.model.MediaFileListModel;
++import com.luckyba.myfiledemo.ui.main.view.adapter.InternalStorageAdapter;
++import com.luckyba.myfiledemo.ui.main.view.container.InternalStorageContainer;
++import com.luckyba.myfiledemo.ui.main.viewmodel.AudioViewModel;
++import com.luckyba.myfiledemo.ui.main.viewmodel.HomeViewModel;
++import com.luckyba.myfiledemo.util.PermissionUtils;
++
++import java.util.ArrayList;
++
++public class AudioFragment extends Fragment {
++
++    private View mRootView;
++    private InternalStorageAdapter mAdapter;
++    private InternalStorageContainer mContainer;
++    private AudioViewModel audioViewModel;
++
++
++    public View onCreateView(@NonNull LayoutInflater inflater,
++                             ViewGroup container, Bundle savedInstanceState) {
++        mRootView = inflater.inflate(R.layout.fragment_home, container, false);
++        if (!PermissionUtils.shouldAskForPermission(getActivity(), PermissionUtils.List_permission)) {
++            init();
++        } else {
++            PermissionUtils.requestPermissions(this, PermissionUtils.List_permission, PermissionUtils.MY_FILE_REQUEST_CODE);
++        }
++        return mRootView;
++    }
++
++    @Override
++    public void onResume() {
++        super.onResume();
++        if (!PermissionUtils.shouldAskForPermission(getActivity(), PermissionUtils.List_permission)) {
++            init();
++        }
++    }
++
++    void init() {
++//        mAdapter = new InternalStorageAdapter();
++//        audioViewModel = new ViewModelProvider(this).get(AudioViewModel.class);
++//        mContainer = new InternalStorageContainer(mRootView, mAdapter, audioViewModel);
++//
++//        audioViewModel.getInternalData().observe(getViewLifecycleOwner(), new Observer<ArrayList<MediaFileListModel>>() {
++//            @Override
++//            public void onChanged(@Nullable ArrayList<MediaFileListModel> s) {
++//                Log.d("lucky ", " size "+ s.size());
++//                mAdapter.setData(s);
++//                mAdapter.notifyDataSetChanged();
++//            }
++//        });
++
++    }
++
++    @Override
++    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
++        if (requestCode == PermissionUtils.MY_FILE_REQUEST_CODE)
++            // If request is cancelled, the result arrays are empty.
++            if (grantResults.length > 0 &&
++                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
++                // Permission is granted. Continue the action or workflow
++                // in your app.
++                init();
++
++            } else {
++
++                AlertDialog.Builder alertBuilder = new AlertDialog.Builder(getContext());
++                alertBuilder.setCancelable(true);
++                alertBuilder.setTitle("Permission necessary");
++                alertBuilder.setMessage("External storage permission is necessary \n " +
++                        "Go to Setting to Enable the permission");
++                alertBuilder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
++
++                    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
++                    public void onClick(DialogInterface dialog, int which) {
++
++                        PermissionUtils.goToAppSettings(getActivity());
++                        // Explain to the user that the feature is unavailable because
++                        // the features requires a permission that the user has denied.
++                        // At the same time, respect the user's decision. Don't link to
++                        // system settings in an effort to convince the user to change
++                        // their decision.
++                    }
++                });
++                AlertDialog alert = alertBuilder.create();
++                alert.show();
++            }
++
++        // Other 'case' lines to check for other
++        // permissions this app might request.
++    }
++}
+\ No newline at end of file
+Index: app/src/main/java/com/luckyba/myfiledemo/ui/main/view/DocumentsFragment.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/ui/main/view/DocumentsFragment.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/java/com/luckyba/myfiledemo/ui/main/view/DocumentsFragment.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,111 @@
++package com.luckyba.myfiledemo.ui.main.view;
++
++import android.annotation.TargetApi;
++import android.app.AlertDialog;
++import android.content.DialogInterface;
++import android.content.pm.PackageManager;
++import android.os.Build;
++import android.os.Bundle;
++import android.util.Log;
++import android.view.LayoutInflater;
++import android.view.View;
++import android.view.ViewGroup;
++
++import androidx.annotation.NonNull;
++import androidx.annotation.Nullable;
++import androidx.fragment.app.Fragment;
++import androidx.lifecycle.Observer;
++import androidx.lifecycle.ViewModelProvider;
++
++import com.luckyba.myfiledemo.R;
++import com.luckyba.myfiledemo.data.model.ImageFolder;
++import com.luckyba.myfiledemo.ui.main.view.adapter.PictureFolderAdapter;
++import com.luckyba.myfiledemo.ui.main.view.container.ImagesContainer;
++import com.luckyba.myfiledemo.ui.main.viewmodel.ImagesViewModel;
++import com.luckyba.myfiledemo.util.PermissionUtils;
++
++import java.util.ArrayList;
++
++public class DocumentsFragment extends Fragment {
++
++    private View mRootView;
++    private PictureFolderAdapter mAdapter;
++    private ImagesContainer mContainer;
++    private ImagesViewModel mImagesViewModel;
++
++
++    public View onCreateView(@NonNull LayoutInflater inflater,
++                             ViewGroup container, Bundle savedInstanceState) {
++        mRootView = inflater.inflate(R.layout.fragment_home, container, false);
++        if (!PermissionUtils.shouldAskForPermission(getActivity(), PermissionUtils.List_permission)) {
++            init();
++        } else {
++            PermissionUtils.requestPermissions(this, PermissionUtils.List_permission, PermissionUtils.MY_FILE_REQUEST_CODE);
++        }
++        return mRootView;
++    }
++
++    @Override
++    public void onResume() {
++        super.onResume();
++        if (!PermissionUtils.shouldAskForPermission(getActivity(), PermissionUtils.List_permission)) {
++            init();
++        }
++    }
++
++    void init() {
++        mAdapter = new PictureFolderAdapter();
++        mImagesViewModel = new ViewModelProvider(this).get(ImagesViewModel.class);
++        mContainer = new ImagesContainer(mRootView, mAdapter, mImagesViewModel);
++
++        mImagesViewModel.getFolderPictureData().observe(getViewLifecycleOwner(), new Observer<ArrayList<ImageFolder>>() {
++            @Override
++            public void onChanged(@Nullable ArrayList<ImageFolder> s) {
++                Log.d("lucky ", " size "+ s.size());
++                mAdapter.setData(s);
++                mAdapter.notifyDataSetChanged();
++            }
++        });
++
++    }
++
++    @Override
++    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
++        if (requestCode == PermissionUtils.MY_FILE_REQUEST_CODE)
++            // If request is cancelled, the result arrays are empty.
++            if (grantResults.length > 0 &&
++                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
++                // Permission is granted. Continue the action or workflow
++                // in your app.
++                init();
++
++            } else {
++
++                AlertDialog.Builder alertBuilder = new AlertDialog.Builder(getContext());
++                alertBuilder.setCancelable(true);
++                alertBuilder.setTitle("Permission necessary");
++                alertBuilder.setMessage("External storage permission is necessary \n " +
++                        "Go to Setting to Enable the permission");
++                alertBuilder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
++
++                    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
++                    public void onClick(DialogInterface dialog, int which) {
++
++                        PermissionUtils.goToAppSettings(getActivity());
++                        // Explain to the user that the feature is unavailable because
++                        // the features requires a permission that the user has denied.
++                        // At the same time, respect the user's decision. Don't link to
++                        // system settings in an effort to convince the user to change
++                        // their decision.
++                    }
++                });
++                AlertDialog alert = alertBuilder.create();
++                alert.show();
++            }
++
++        // Other 'case' lines to check for other
++        // permissions this app might request.
++    }
++
++
++}
+\ No newline at end of file
+Index: app/src/main/java/com/luckyba/myfiledemo/ui/main/view/DownloadsFragment.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/ui/main/view/DownloadsFragment.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/java/com/luckyba/myfiledemo/ui/main/view/DownloadsFragment.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,111 @@
++package com.luckyba.myfiledemo.ui.main.view;
++
++import android.annotation.TargetApi;
++import android.app.AlertDialog;
++import android.content.DialogInterface;
++import android.content.pm.PackageManager;
++import android.os.Build;
++import android.os.Bundle;
++import android.util.Log;
++import android.view.LayoutInflater;
++import android.view.View;
++import android.view.ViewGroup;
++
++import androidx.annotation.NonNull;
++import androidx.annotation.Nullable;
++import androidx.fragment.app.Fragment;
++import androidx.lifecycle.Observer;
++import androidx.lifecycle.ViewModelProvider;
++
++import com.luckyba.myfiledemo.R;
++import com.luckyba.myfiledemo.data.model.ImageFolder;
++import com.luckyba.myfiledemo.ui.main.view.adapter.PictureFolderAdapter;
++import com.luckyba.myfiledemo.ui.main.view.container.ImagesContainer;
++import com.luckyba.myfiledemo.ui.main.viewmodel.ImagesViewModel;
++import com.luckyba.myfiledemo.util.PermissionUtils;
++
++import java.util.ArrayList;
++
++public class DownloadsFragment extends Fragment {
++
++    private View mRootView;
++    private PictureFolderAdapter mAdapter;
++    private ImagesContainer mContainer;
++    private ImagesViewModel mImagesViewModel;
++
++
++    public View onCreateView(@NonNull LayoutInflater inflater,
++                             ViewGroup container, Bundle savedInstanceState) {
++        mRootView = inflater.inflate(R.layout.fragment_home, container, false);
++        if (!PermissionUtils.shouldAskForPermission(getActivity(), PermissionUtils.List_permission)) {
++            init();
++        } else {
++            PermissionUtils.requestPermissions(this, PermissionUtils.List_permission, PermissionUtils.MY_FILE_REQUEST_CODE);
++        }
++        return mRootView;
++    }
++
++    @Override
++    public void onResume() {
++        super.onResume();
++        if (!PermissionUtils.shouldAskForPermission(getActivity(), PermissionUtils.List_permission)) {
++            init();
++        }
++    }
++
++    void init() {
++        mAdapter = new PictureFolderAdapter();
++        mImagesViewModel = new ViewModelProvider(this).get(ImagesViewModel.class);
++        mContainer = new ImagesContainer(mRootView, mAdapter, mImagesViewModel);
++
++        mImagesViewModel.getFolderPictureData().observe(getViewLifecycleOwner(), new Observer<ArrayList<ImageFolder>>() {
++            @Override
++            public void onChanged(@Nullable ArrayList<ImageFolder> s) {
++                Log.d("lucky ", " size "+ s.size());
++                mAdapter.setData(s);
++                mAdapter.notifyDataSetChanged();
++            }
++        });
++
++    }
++
++    @Override
++    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
++        if (requestCode == PermissionUtils.MY_FILE_REQUEST_CODE)
++            // If request is cancelled, the result arrays are empty.
++            if (grantResults.length > 0 &&
++                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
++                // Permission is granted. Continue the action or workflow
++                // in your app.
++                init();
++
++            } else {
++
++                AlertDialog.Builder alertBuilder = new AlertDialog.Builder(getContext());
++                alertBuilder.setCancelable(true);
++                alertBuilder.setTitle("Permission necessary");
++                alertBuilder.setMessage("External storage permission is necessary \n " +
++                        "Go to Setting to Enable the permission");
++                alertBuilder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
++
++                    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
++                    public void onClick(DialogInterface dialog, int which) {
++
++                        PermissionUtils.goToAppSettings(getActivity());
++                        // Explain to the user that the feature is unavailable because
++                        // the features requires a permission that the user has denied.
++                        // At the same time, respect the user's decision. Don't link to
++                        // system settings in an effort to convince the user to change
++                        // their decision.
++                    }
++                });
++                AlertDialog alert = alertBuilder.create();
++                alert.show();
++            }
++
++        // Other 'case' lines to check for other
++        // permissions this app might request.
++    }
++
++
++}
+\ No newline at end of file
+Index: app/src/main/java/com/luckyba/myfiledemo/ui/main/view/ExternalFragment.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/ui/main/view/ExternalFragment.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/java/com/luckyba/myfiledemo/ui/main/view/ExternalFragment.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,4 @@
++package com.luckyba.myfiledemo.ui.main.view;
++
++public class ExternalFragment {
++}
+Index: app/src/main/java/com/luckyba/myfiledemo/ui/main/view/ImagesFragment.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/ui/main/view/ImagesFragment.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/java/com/luckyba/myfiledemo/ui/main/view/ImagesFragment.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,120 @@
++package com.luckyba.myfiledemo.ui.main.view;
++
++import android.annotation.TargetApi;
++import android.app.AlertDialog;
++import android.content.DialogInterface;
++import android.content.pm.PackageManager;
++import android.os.Build;
++import android.os.Bundle;
++import android.util.Log;
++import android.view.LayoutInflater;
++import android.view.View;
++import android.view.ViewGroup;
++
++import androidx.annotation.NonNull;
++import androidx.annotation.Nullable;
++import androidx.fragment.app.Fragment;
++import androidx.lifecycle.Observer;
++import androidx.lifecycle.ViewModelProvider;
++
++import com.luckyba.myfiledemo.R;
++import com.luckyba.myfiledemo.data.model.ImageFolder;
++import com.luckyba.myfiledemo.ui.main.view.adapter.PictureFolderAdapter;
++import com.luckyba.myfiledemo.ui.main.view.container.ImagesContainer;
++import com.luckyba.myfiledemo.ui.main.view.viewholder.MarginDecoration;
++import com.luckyba.myfiledemo.ui.main.viewmodel.ImagesViewModel;
++import com.luckyba.myfiledemo.util.AutoFitRecyclerView;
++import com.luckyba.myfiledemo.util.PermissionUtils;
++
++import java.util.ArrayList;
++
++public class ImagesFragment extends Fragment {
++
++    private View mRootView;
++    private PictureFolderAdapter mAdapter;
++    private AutoFitRecyclerView mList;
++    private ImagesContainer mContainer;
++    private ImagesViewModel mImagesViewModel;
++
++
++    public View onCreateView(@NonNull LayoutInflater inflater,
++                             ViewGroup container, Bundle savedInstanceState) {
++        mRootView = inflater.inflate(R.layout.fragment_image, container, false);
++        if (!PermissionUtils.shouldAskForPermission(getActivity(), PermissionUtils.List_permission)) {
++            init();
++        } else {
++            PermissionUtils.requestPermissions(this, PermissionUtils.List_permission, PermissionUtils.MY_FILE_REQUEST_CODE);
++        }
++        return mRootView;
++    }
++
++    @Override
++    public void onResume() {
++        super.onResume();
++        if (!PermissionUtils.shouldAskForPermission(getActivity(), PermissionUtils.List_permission)) {
++            init();
++        }
++    }
++
++    void init() {
++        mAdapter = new PictureFolderAdapter();
++
++        mList = mRootView.findViewById(R.id.list_folder_media);
++        mList.addItemDecoration(new MarginDecoration(getContext()));
++        mList.hasFixedSize();
++        mList.setAdapter(mAdapter);
++
++        mImagesViewModel = new ViewModelProvider(this).get(ImagesViewModel.class);
++        mContainer = new ImagesContainer(mRootView, mAdapter, mImagesViewModel);
++
++        mImagesViewModel.getFolderPictureData().observe(getViewLifecycleOwner(), new Observer<ArrayList<ImageFolder>>() {
++            @Override
++            public void onChanged(@Nullable ArrayList<ImageFolder> s) {
++                Log.d("lucky ", " size "+ s.size());
++                mAdapter.setData(s);
++                mAdapter.notifyDataSetChanged();
++            }
++        });
++
++    }
++
++    @Override
++    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
++        if (requestCode == PermissionUtils.MY_FILE_REQUEST_CODE)
++            // If request is cancelled, the result arrays are empty.
++            if (grantResults.length > 0 &&
++                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
++                // Permission is granted. Continue the action or workflow
++                // in your app.
++                init();
++
++            } else {
++
++                AlertDialog.Builder alertBuilder = new AlertDialog.Builder(getContext());
++                alertBuilder.setCancelable(true);
++                alertBuilder.setTitle("Permission necessary");
++                alertBuilder.setMessage("External storage permission is necessary \n " +
++                        "Go to Setting to Enable the permission");
++                alertBuilder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
++
++                    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
++                    public void onClick(DialogInterface dialog, int which) {
++
++                        PermissionUtils.goToAppSettings(getActivity());
++                        // Explain to the user that the feature is unavailable because
++                        // the features requires a permission that the user has denied.
++                        // At the same time, respect the user's decision. Don't link to
++                        // system settings in an effort to convince the user to change
++                        // their decision.
++                    }
++                });
++                AlertDialog alert = alertBuilder.create();
++                alert.show();
++            }
++
++        // Other 'case' lines to check for other
++        // permissions this app might request.
++    }
++
++
++}
+\ No newline at end of file
+Index: app/src/main/java/com/luckyba/myfiledemo/ui/main/view/MainActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/ui/main/view/MainActivity.java	(revision 7b52a715990f8fc0af0cc8820424dd60e107a8f6)
++++ app/src/main/java/com/luckyba/myfiledemo/ui/main/view/MainActivity.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -3,6 +3,8 @@
+ import android.content.pm.PackageManager;
+ import android.os.Build;
+ import android.os.Bundle;
++import android.view.Gravity;
++import android.view.MenuItem;
+ import android.view.View;
+ import android.view.Menu;
+ import android.view.Window;
+@@ -17,6 +19,7 @@
+ 
+ import androidx.annotation.NonNull;
+ import androidx.annotation.RequiresApi;
++import androidx.core.view.GravityCompat;
+ import androidx.navigation.NavController;
+ import androidx.navigation.Navigation;
+ import androidx.navigation.ui.AppBarConfiguration;
+@@ -25,10 +28,12 @@
+ import androidx.appcompat.app.AppCompatActivity;
+ import androidx.appcompat.widget.Toolbar;
+ 
+-public class MainActivity extends AppCompatActivity {
++public class MainActivity extends AppCompatActivity
++        implements NavigationView.OnNavigationItemSelectedListener{
+ 
+     private AppBarConfiguration mAppBarConfiguration;
+-
++    private DrawerLayout mDrawer;
++    private static int navItemIndex = 0;
+     @Override
+     protected void onCreate(Bundle savedInstanceState) {
+         super.onCreate(savedInstanceState);
+@@ -51,16 +56,17 @@
+                         .setAction("Action", null).show();
+             }
+         });
+-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
++        mDrawer = findViewById(R.id.drawer_layout);
+         NavigationView navigationView = findViewById(R.id.nav_view);
+         // Passing each menu ID as a set of Ids because each
+         // menu should be considered as top level destinations.
+         mAppBarConfiguration = new AppBarConfiguration.Builder(
+-                R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow)
+-                .setOpenableLayout(drawer)
++                R.id.nav_recent, R.id.nav_gallery, R.id.nav_videos, R.id.nav_audios, R.id.nav_documents
++                , R.id.nav_downloads, R.id.nav_internal_storage, R.id.nav_external_storage)
++                .setOpenableLayout(mDrawer)
+                 .build();
+-        drawer.setStatusBarBackgroundColor(color);
+-        drawer.setScrimColor(getColor(R.color.action_bar_back_ground));
++        mDrawer.setStatusBarBackgroundColor(color);
++        mDrawer.setScrimColor(getColor(R.color.action_bar_back_ground));
+         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
+         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
+         NavigationUI.setupWithNavController(navigationView, navController);
+@@ -80,5 +86,22 @@
+                 || super.onSupportNavigateUp();
+     }
+ 
++    @Override
++    public void onBackPressed() {
++        if (mDrawer.isDrawerOpen(GravityCompat.START)) {
++            mDrawer.closeDrawer(GravityCompat.START);
++        } else {
++
++        }
++    }
+ 
++    @Override
++    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
++        int id = item.getItemId();
++        switch (id) {
++            case R.id.list_home:
++
++        }
++        return false;
++    }
+ }
+\ No newline at end of file
+Index: app/src/main/java/com/luckyba/myfiledemo/ui/main/view/RecentFragment.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/ui/main/view/RecentFragment.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/java/com/luckyba/myfiledemo/ui/main/view/RecentFragment.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,111 @@
++package com.luckyba.myfiledemo.ui.main.view;
++
++import android.annotation.TargetApi;
++import android.app.AlertDialog;
++import android.content.DialogInterface;
++import android.content.pm.PackageManager;
++import android.os.Build;
++import android.os.Bundle;
++import android.util.Log;
++import android.view.LayoutInflater;
++import android.view.View;
++import android.view.ViewGroup;
++
++import androidx.annotation.NonNull;
++import androidx.annotation.Nullable;
++import androidx.fragment.app.Fragment;
++import androidx.lifecycle.Observer;
++import androidx.lifecycle.ViewModelProvider;
++
++import com.luckyba.myfiledemo.R;
++import com.luckyba.myfiledemo.data.model.ImageFolder;
++import com.luckyba.myfiledemo.ui.main.view.adapter.PictureFolderAdapter;
++import com.luckyba.myfiledemo.ui.main.view.container.ImagesContainer;
++import com.luckyba.myfiledemo.ui.main.viewmodel.ImagesViewModel;
++import com.luckyba.myfiledemo.util.PermissionUtils;
++
++import java.util.ArrayList;
++
++public class RecentFragment extends Fragment {
++
++    private View mRootView;
++    private PictureFolderAdapter mAdapter;
++    private ImagesContainer mContainer;
++    private ImagesViewModel mImagesViewModel;
++
++
++    public View onCreateView(@NonNull LayoutInflater inflater,
++                             ViewGroup container, Bundle savedInstanceState) {
++        mRootView = inflater.inflate(R.layout.fragment_home, container, false);
++        if (!PermissionUtils.shouldAskForPermission(getActivity(), PermissionUtils.List_permission)) {
++            init();
++        } else {
++            PermissionUtils.requestPermissions(this, PermissionUtils.List_permission, PermissionUtils.MY_FILE_REQUEST_CODE);
++        }
++        return mRootView;
++    }
++
++    @Override
++    public void onResume() {
++        super.onResume();
++        if (!PermissionUtils.shouldAskForPermission(getActivity(), PermissionUtils.List_permission)) {
++            init();
++        }
++    }
++
++    void init() {
++        mAdapter = new PictureFolderAdapter();
++        mImagesViewModel = new ViewModelProvider(this).get(ImagesViewModel.class);
++        mContainer = new ImagesContainer(mRootView, mAdapter, mImagesViewModel);
++
++        mImagesViewModel.getFolderPictureData().observe(getViewLifecycleOwner(), new Observer<ArrayList<ImageFolder>>() {
++            @Override
++            public void onChanged(@Nullable ArrayList<ImageFolder> s) {
++                Log.d("lucky ", " size "+ s.size());
++                mAdapter.setData(s);
++                mAdapter.notifyDataSetChanged();
++            }
++        });
++
++    }
++
++    @Override
++    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
++        if (requestCode == PermissionUtils.MY_FILE_REQUEST_CODE)
++            // If request is cancelled, the result arrays are empty.
++            if (grantResults.length > 0 &&
++                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
++                // Permission is granted. Continue the action or workflow
++                // in your app.
++                init();
++
++            } else {
++
++                AlertDialog.Builder alertBuilder = new AlertDialog.Builder(getContext());
++                alertBuilder.setCancelable(true);
++                alertBuilder.setTitle("Permission necessary");
++                alertBuilder.setMessage("External storage permission is necessary \n " +
++                        "Go to Setting to Enable the permission");
++                alertBuilder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
++
++                    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
++                    public void onClick(DialogInterface dialog, int which) {
++
++                        PermissionUtils.goToAppSettings(getActivity());
++                        // Explain to the user that the feature is unavailable because
++                        // the features requires a permission that the user has denied.
++                        // At the same time, respect the user's decision. Don't link to
++                        // system settings in an effort to convince the user to change
++                        // their decision.
++                    }
++                });
++                AlertDialog alert = alertBuilder.create();
++                alert.show();
++            }
++
++        // Other 'case' lines to check for other
++        // permissions this app might request.
++    }
++
++
++}
+\ No newline at end of file
+Index: app/src/main/java/com/luckyba/myfiledemo/ui/main/view/VideosFragment.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/ui/main/view/VideosFragment.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/java/com/luckyba/myfiledemo/ui/main/view/VideosFragment.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,111 @@
++package com.luckyba.myfiledemo.ui.main.view;
++
++import android.annotation.TargetApi;
++import android.app.AlertDialog;
++import android.content.DialogInterface;
++import android.content.pm.PackageManager;
++import android.os.Build;
++import android.os.Bundle;
++import android.util.Log;
++import android.view.LayoutInflater;
++import android.view.View;
++import android.view.ViewGroup;
++
++import androidx.annotation.NonNull;
++import androidx.annotation.Nullable;
++import androidx.fragment.app.Fragment;
++import androidx.lifecycle.Observer;
++import androidx.lifecycle.ViewModelProvider;
++
++import com.luckyba.myfiledemo.R;
++import com.luckyba.myfiledemo.data.model.ImageFolder;
++import com.luckyba.myfiledemo.ui.main.view.adapter.PictureFolderAdapter;
++import com.luckyba.myfiledemo.ui.main.view.container.ImagesContainer;
++import com.luckyba.myfiledemo.ui.main.viewmodel.ImagesViewModel;
++import com.luckyba.myfiledemo.util.PermissionUtils;
++
++import java.util.ArrayList;
++
++public class VideosFragment extends Fragment {
++
++    private View mRootView;
++    private PictureFolderAdapter mAdapter;
++    private ImagesContainer mContainer;
++    private ImagesViewModel mImagesViewModel;
++
++
++    public View onCreateView(@NonNull LayoutInflater inflater,
++                             ViewGroup container, Bundle savedInstanceState) {
++        mRootView = inflater.inflate(R.layout.fragment_home, container, false);
++        if (!PermissionUtils.shouldAskForPermission(getActivity(), PermissionUtils.List_permission)) {
++            init();
++        } else {
++            PermissionUtils.requestPermissions(this, PermissionUtils.List_permission, PermissionUtils.MY_FILE_REQUEST_CODE);
++        }
++        return mRootView;
++    }
++
++    @Override
++    public void onResume() {
++        super.onResume();
++        if (!PermissionUtils.shouldAskForPermission(getActivity(), PermissionUtils.List_permission)) {
++            init();
++        }
++    }
++
++    void init() {
++        mAdapter = new PictureFolderAdapter();
++        mImagesViewModel = new ViewModelProvider(this).get(ImagesViewModel.class);
++        mContainer = new ImagesContainer(mRootView, mAdapter, mImagesViewModel);
++
++        mImagesViewModel.getFolderPictureData().observe(getViewLifecycleOwner(), new Observer<ArrayList<ImageFolder>>() {
++            @Override
++            public void onChanged(@Nullable ArrayList<ImageFolder> s) {
++                Log.d("lucky ", " size "+ s.size());
++                mAdapter.setData(s);
++                mAdapter.notifyDataSetChanged();
++            }
++        });
++
++    }
++
++    @Override
++    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
++        if (requestCode == PermissionUtils.MY_FILE_REQUEST_CODE)
++            // If request is cancelled, the result arrays are empty.
++            if (grantResults.length > 0 &&
++                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
++                // Permission is granted. Continue the action or workflow
++                // in your app.
++                init();
++
++            } else {
++
++                AlertDialog.Builder alertBuilder = new AlertDialog.Builder(getContext());
++                alertBuilder.setCancelable(true);
++                alertBuilder.setTitle("Permission necessary");
++                alertBuilder.setMessage("External storage permission is necessary \n " +
++                        "Go to Setting to Enable the permission");
++                alertBuilder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
++
++                    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
++                    public void onClick(DialogInterface dialog, int which) {
++
++                        PermissionUtils.goToAppSettings(getActivity());
++                        // Explain to the user that the feature is unavailable because
++                        // the features requires a permission that the user has denied.
++                        // At the same time, respect the user's decision. Don't link to
++                        // system settings in an effort to convince the user to change
++                        // their decision.
++                    }
++                });
++                AlertDialog alert = alertBuilder.create();
++                alert.show();
++            }
++
++        // Other 'case' lines to check for other
++        // permissions this app might request.
++    }
++
++
++}
+\ No newline at end of file
+Index: app/src/main/java/com/luckyba/myfiledemo/ui/main/view/adapter/InternalStorageAdapter.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/ui/main/view/adapter/InternalStorageAdapter.java	(revision 7b52a715990f8fc0af0cc8820424dd60e107a8f6)
++++ app/src/main/java/com/luckyba/myfiledemo/ui/main/view/adapter/InternalStorageAdapter.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -13,23 +13,22 @@
+ 
+ import com.luckyba.myfiledemo.R;
+ import com.luckyba.myfiledemo.data.model.InternalStorageFilesModel;
+-import com.luckyba.myfiledemo.ui.main.view.MainActivity;
+ import com.luckyba.myfiledemo.ui.main.view.viewholder.CommonViewHolder;
+-import com.luckyba.myfiledemo.ui.main.view.viewholder.Listener;
++import com.luckyba.myfiledemo.ui.main.view.viewholder.CommonListener;
+ 
+ import java.io.File;
+ import java.util.ArrayList;
+ import java.util.List;
+ 
+ public class InternalStorageAdapter extends RecyclerView.Adapter<CommonViewHolder> {
+-    ArrayList<InternalStorageFilesModel> mListData;
+-    Listener mListener;
++    ArrayList<InternalStorageFilesModel> mListData = new ArrayList<>();
++    CommonListener mCommonListener;
+     public InternalStorageAdapter() {
+         super();
+     }
+ 
+-    public void setListener (Listener listener) {
+-        mListener = listener;
++    public void setListener (CommonListener commonListener) {
++        mCommonListener = commonListener;
+     }
+ 
+     @Override
+@@ -54,8 +53,9 @@
+     @Override
+     public void onBindViewHolder(@NonNull CommonViewHolder holder, int position) {
+ 
+-        holder.itemView.setOnClickListener(v->mListener.onclick(v, position));
+-        holder.itemView.setOnLongClickListener(v -> {mListener.onLongClick(v, position); return false;});
++        holder.itemView.setOnClickListener(v-> mCommonListener.onclick(v, position));
++        holder.itemView.setOnLongClickListener(v -> {
++            mCommonListener.onLongClick(v, position); return false;});
+ 
+         InternalStorageFilesModel data = mListData.get(position);
+         holder.nameItem.setText(data.getFileName());
+@@ -107,6 +107,7 @@
+     }
+ 
+     public void setData(ArrayList<InternalStorageFilesModel> data) {
++        mListData.clear();
+         mListData = data;
+     }
+ 
+Index: app/src/main/java/com/luckyba/myfiledemo/ui/main/view/adapter/PictureAdapter.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/ui/main/view/adapter/PictureAdapter.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/java/com/luckyba/myfiledemo/ui/main/view/adapter/PictureAdapter.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,72 @@
++package com.luckyba.myfiledemo.ui.main.view.adapter;
++
++import android.content.Context;
++import android.view.LayoutInflater;
++import android.view.View;
++import android.view.ViewGroup;
++
++import androidx.annotation.NonNull;
++import androidx.recyclerview.widget.RecyclerView;
++
++import com.bumptech.glide.Glide;
++import com.bumptech.glide.request.RequestOptions;
++import com.luckyba.myfiledemo.R;
++import com.luckyba.myfiledemo.ui.main.view.viewholder.CommonListener;
++import com.luckyba.myfiledemo.ui.main.view.viewholder.PictureHolder;
++
++import java.util.ArrayList;
++
++import static androidx.core.view.ViewCompat.setTransitionName;
++
++public class PictureAdapter extends RecyclerView.Adapter<PictureHolder> {
++
++    private ArrayList<PictureFacer> pictureList;
++    private Context pictureContx;
++    private final CommonListener mListerner;
++
++    /**
++     *
++     * @param pictureList ArrayList of pictureFacer objects
++     * @param pictureContx The Activities Context
++     * @param picListerner An interface for listening to clicks on the RecyclerView's items
++     */
++    public PictureAdapter(ArrayList<PictureFacer> pictureList, Context pictureContx, CommonListener picListerner) {
++        this.pictureList = pictureList;
++        this.pictureContx = pictureContx;
++        this.mListerner = picListerner;
++    }
++
++    @NonNull
++    @Override
++    public PictureHolder onCreateViewHolder(@NonNull ViewGroup container, int position) {
++        LayoutInflater inflater = LayoutInflater.from(container.getContext());
++        View cell = inflater.inflate(R.layout.pic_holder_item, container, false);
++        return new PictureHolder(cell);
++    }
++
++    @Override
++    public void onBindViewHolder(@NonNull final PictureHolder holder, final int position) {
++
++        final PictureFacer image = pictureList.get(position);
++
++        Glide.with(pictureContx)
++                .load(image.getPicturePath())
++                .apply(new RequestOptions().centerCrop())
++                .into(holder.picture);
++
++        setTransitionName(holder.picture, String.valueOf(position) + "_image");
++
++        holder.picture.setOnClickListener(new View.OnClickListener() {
++            @Override
++            public void onClick(View v) {
++                mListerner.onclick(v, position);
++            }
++        });
++
++    }
++
++    @Override
++    public int getItemCount() {
++        return pictureList.size();
++    }
++}
+Index: app/src/main/java/com/luckyba/myfiledemo/ui/main/view/adapter/PictureFacer.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/ui/main/view/adapter/PictureFacer.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/java/com/luckyba/myfiledemo/ui/main/view/adapter/PictureFacer.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,63 @@
++package com.luckyba.myfiledemo.ui.main.view.adapter;
++
++public class PictureFacer {
++
++    private String picturName;
++    private String picturePath;
++    private  String pictureSize;
++    private  String imageUri;
++    private Boolean selected = false;
++
++    public PictureFacer(){
++
++    }
++
++    public PictureFacer(String picturName, String picturePath, String pictureSize, String imageUri) {
++        this.picturName = picturName;
++        this.picturePath = picturePath;
++        this.pictureSize = pictureSize;
++        this.imageUri = imageUri;
++    }
++
++
++    public String getPicturName() {
++        return picturName;
++    }
++
++    public void setPicturName(String picturName) {
++        this.picturName = picturName;
++    }
++
++    public String getPicturePath() {
++        return picturePath;
++    }
++
++    public void setPicturePath(String picturePath) {
++        this.picturePath = picturePath;
++    }
++
++    public String getPictureSize() {
++        return pictureSize;
++    }
++
++    public void setPictureSize(String pictureSize) {
++        this.pictureSize = pictureSize;
++    }
++
++    public String getImageUri() {
++        return imageUri;
++    }
++
++    public void setImageUri(String imageUri) {
++        this.imageUri = imageUri;
++    }
++
++    public Boolean getSelected() {
++        return selected;
++    }
++
++    public void setSelected(Boolean selected) {
++        this.selected = selected;
++    }
++}
++
+Index: app/src/main/java/com/luckyba/myfiledemo/ui/main/view/adapter/PictureFolderAdapter.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/ui/main/view/adapter/PictureFolderAdapter.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/java/com/luckyba/myfiledemo/ui/main/view/adapter/PictureFolderAdapter.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,78 @@
++package com.luckyba.myfiledemo.ui.main.view.adapter;
++
++import android.content.Context;
++import android.view.LayoutInflater;
++import android.view.View;
++import android.view.ViewGroup;
++
++import androidx.annotation.NonNull;
++import androidx.recyclerview.widget.RecyclerView;
++
++import com.bumptech.glide.Glide;
++import com.bumptech.glide.request.RequestOptions;
++import com.luckyba.myfiledemo.R;
++import com.luckyba.myfiledemo.data.model.ImageFolder;
++import com.luckyba.myfiledemo.ui.main.view.viewholder.CommonListener;
++import com.luckyba.myfiledemo.ui.main.view.viewholder.FolderHolder;
++
++import java.util.ArrayList;
++
++public class PictureFolderAdapter extends RecyclerView.Adapter<FolderHolder>{
++
++    private ArrayList<ImageFolder> mListFolders = new ArrayList<>();
++    private Context mContext;
++    private CommonListener listenToClick;
++
++    public PictureFolderAdapter() {
++    }
++
++    public void setListener (CommonListener listen) {
++        this.listenToClick = listen;
++    }
++
++    public void setData(ArrayList<ImageFolder> imageFolders) {
++        mListFolders.clear();
++        mListFolders = imageFolders;
++    }
++
++    @NonNull
++    @Override
++    public FolderHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
++        mContext= parent.getContext();
++        LayoutInflater inflater = LayoutInflater.from(mContext);
++        View cell = inflater.inflate(R.layout.picture_folder_item, parent, false);
++        return new FolderHolder(cell);
++
++    }
++
++    @Override
++    public void onBindViewHolder(@NonNull FolderHolder holder, int position) {
++        final ImageFolder folder = mListFolders.get(position);
++
++        Glide.with(mContext)
++                .load(folder.getFirstPic())
++                .apply(new RequestOptions().centerCrop())
++                .into(holder.folderPic);
++
++        //setting the number of images
++        String text = ""+folder.getFolderName();
++        String folderSizeString=""+folder.getNumberOfPics()+" Media";
++        holder.folderSize.setText(folderSizeString);
++        holder.folderName.setText(text);
++        holder.folderPic.setOnClickListener(new View.OnClickListener() {
++            @Override
++            public void onClick(View v) {
++                listenToClick.onclick(v, position);
++            }
++        });
++
++    }
++
++    @Override
++    public int getItemCount() {
++        return mListFolders.size();
++    }
++
++
++}
++
+Index: app/src/main/java/com/luckyba/myfiledemo/ui/main/view/container/AudioContainer.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/ui/main/view/container/AudioContainer.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/java/com/luckyba/myfiledemo/ui/main/view/container/AudioContainer.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,4 @@
++package com.luckyba.myfiledemo.ui.main.view.container;
++
++public class AudioContainer {
++}
+Index: app/src/main/java/com/luckyba/myfiledemo/ui/main/view/container/CommunicateActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/ui/main/view/container/CommunicateActivity.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/java/com/luckyba/myfiledemo/ui/main/view/container/CommunicateActivity.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,5 @@
++package com.luckyba.myfiledemo.ui.main.view.container;
++
++public interface CommunicateActivity {
++    void onBackPressed (int navItemIndex);
++}
+Index: app/src/main/java/com/luckyba/myfiledemo/ui/main/view/container/ImagesContainer.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/ui/main/view/container/ImagesContainer.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/java/com/luckyba/myfiledemo/ui/main/view/container/ImagesContainer.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,23 @@
++package com.luckyba.myfiledemo.ui.main.view.container;
++
++import android.view.View;
++
++import com.luckyba.myfiledemo.ui.main.view.adapter.PictureFolderAdapter;
++import com.luckyba.myfiledemo.ui.main.view.viewholder.CommonListener;
++import com.luckyba.myfiledemo.ui.main.viewmodel.ImagesViewModel;
++
++public class ImagesContainer implements CommonListener {
++
++    public ImagesContainer(View view, PictureFolderAdapter adapter, ImagesViewModel viewModel) {
++    }
++
++    @Override
++    public void onclick(View view, int pos) {
++
++    }
++
++    @Override
++    public void onLongClick(View view, int pos) {
++
++    }
++}
+Index: app/src/main/java/com/luckyba/myfiledemo/ui/main/view/container/InternalStorageContainer.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/ui/main/view/container/InternalStorageContainer.java	(revision 7b52a715990f8fc0af0cc8820424dd60e107a8f6)
++++ app/src/main/java/com/luckyba/myfiledemo/ui/main/view/container/InternalStorageContainer.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -1,22 +1,11 @@
+ package com.luckyba.myfiledemo.ui.main.view.container;
+ 
+-import android.app.Activity;
+ import android.content.Context;
+-import android.content.Intent;
+-import android.content.pm.PackageManager;
+-import android.net.Uri;
+ import android.os.Environment;
+-import android.util.Log;
+-import android.view.MotionEvent;
+ import android.view.View;
+-import android.widget.AdapterView;
+ import android.widget.TextView;
+ import android.widget.Toast;
+ 
+-import androidx.annotation.NonNull;
+-import androidx.annotation.Nullable;
+-import androidx.lifecycle.Observer;
+-import androidx.lifecycle.ViewModelProvider;
+ import androidx.recyclerview.widget.DefaultItemAnimator;
+ import androidx.recyclerview.widget.LinearLayoutManager;
+ import androidx.recyclerview.widget.RecyclerView;
+@@ -24,18 +13,15 @@
+ import com.luckyba.myfiledemo.R;
+ import com.luckyba.myfiledemo.app.MyFileApplication;
+ import com.luckyba.myfiledemo.data.model.InternalStorageFilesModel;
+-import com.luckyba.myfiledemo.ui.main.view.activities.FullImageViewActivity;
+-import com.luckyba.myfiledemo.ui.main.view.activities.TextFileViewActivity;
+ import com.luckyba.myfiledemo.ui.main.view.adapter.InternalStorageAdapter;
+-import com.luckyba.myfiledemo.ui.main.view.viewholder.Listener;
++import com.luckyba.myfiledemo.ui.main.view.viewholder.CommonListener;
+ import com.luckyba.myfiledemo.ui.main.viewmodel.HomeViewModel;
+ import com.luckyba.myfiledemo.util.Constants;
+ 
+ import java.io.File;
+ import java.util.ArrayList;
+-import java.util.List;
+ 
+-public class InternalStorageContainer implements Listener {
++public class InternalStorageContainer implements CommonListener {
+ 
+     private static String TAG = "InternalStorageContainer";
+     private View mContainer;
+@@ -108,7 +94,6 @@
+         Context context = mContainer.getContext();
+         if (file.isDirectory()) {//check if selected item is directory
+             if (file.canRead()) {//if directory is readable
+-                mAdapter.setData(null);
+                 arrayListFilePaths.add(filePath);
+                 getFilesList(filePath);
+                 mHomeViewModel.setData(filePath);
+Index: app/src/main/java/com/luckyba/myfiledemo/ui/main/view/viewholder/Listener.java
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/ui/main/view/viewholder/Listener.java	(revision 7b52a715990f8fc0af0cc8820424dd60e107a8f6)
++++ app/src/main/java/com/luckyba/myfiledemo/ui/main/view/viewholder/CommonListener.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -2,7 +2,7 @@
+ 
+ import android.view.View;
+ 
+-public interface Listener {
++public interface CommonListener {
+ 
+     void onclick (View view, int pos);
+ 
+Index: app/src/main/java/com/luckyba/myfiledemo/ui/main/view/viewholder/FolderHolder.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/ui/main/view/viewholder/FolderHolder.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/java/com/luckyba/myfiledemo/ui/main/view/viewholder/FolderHolder.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,28 @@
++package com.luckyba.myfiledemo.ui.main.view.viewholder;
++
++import android.view.View;
++import android.widget.ImageView;
++import android.widget.TextView;
++
++import androidx.annotation.NonNull;
++import androidx.cardview.widget.CardView;
++import androidx.recyclerview.widget.RecyclerView;
++
++import com.luckyba.myfiledemo.R;
++
++public class FolderHolder extends RecyclerView.ViewHolder{
++    public ImageView folderPic;
++    public TextView folderName;
++    //set textview for foldersize
++    public TextView folderSize;
++
++    public CardView folderCard;
++
++    public FolderHolder(@NonNull View itemView) {
++        super(itemView);
++        folderPic = itemView.findViewById(R.id.folderPic);
++        folderName = itemView.findViewById(R.id.folderName);
++        folderSize=itemView.findViewById(R.id.folderSize);
++        folderCard = itemView.findViewById(R.id.folderCard);
++    }
++}
+Index: app/src/main/java/com/luckyba/myfiledemo/ui/main/view/viewholder/IndicatorHolder.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/ui/main/view/viewholder/IndicatorHolder.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/java/com/luckyba/myfiledemo/ui/main/view/viewholder/IndicatorHolder.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,24 @@
++package com.luckyba.myfiledemo.ui.main.view.viewholder;
++
++import android.view.View;
++import android.widget.ImageView;
++
++import androidx.annotation.NonNull;
++import androidx.cardview.widget.CardView;
++import androidx.recyclerview.widget.RecyclerView;
++
++import com.luckyba.myfiledemo.R;
++
++public class IndicatorHolder extends RecyclerView.ViewHolder{
++
++    public ImageView image;
++    private CardView card;
++    View positionController;
++
++    IndicatorHolder(@NonNull View itemView) {
++        super(itemView);
++        image = itemView.findViewById(R.id.imageIndicator);
++        card = itemView.findViewById(R.id.indicatorCard);
++        positionController = itemView.findViewById(R.id.activeImage);
++    }
++}
+Index: app/src/main/java/com/luckyba/myfiledemo/ui/main/view/viewholder/MarginDecoration.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/ui/main/view/viewholder/MarginDecoration.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/java/com/luckyba/myfiledemo/ui/main/view/viewholder/MarginDecoration.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,24 @@
++package com.luckyba.myfiledemo.ui.main.view.viewholder;
++
++import android.content.Context;
++import android.graphics.Rect;
++import android.view.View;
++
++import androidx.annotation.NonNull;
++import androidx.recyclerview.widget.RecyclerView;
++
++import com.luckyba.myfiledemo.R;
++
++public class MarginDecoration extends RecyclerView.ItemDecoration {
++    private int margin;
++
++    public MarginDecoration(Context context) {
++        margin = context.getResources().getDimensionPixelSize(R.dimen.item_margin);
++    }
++
++    @Override
++    public void getItemOffsets(
++            @NonNull Rect outRect, @NonNull View view, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
++        outRect.set(margin, margin, margin, margin);
++    }
++}
+Index: app/src/main/java/com/luckyba/myfiledemo/ui/main/view/viewholder/PictureHolder.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/ui/main/view/viewholder/PictureHolder.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/java/com/luckyba/myfiledemo/ui/main/view/viewholder/PictureHolder.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,22 @@
++package com.luckyba.myfiledemo.ui.main.view.viewholder;
++
++
++import android.view.View;
++import android.widget.ImageView;
++
++import androidx.annotation.NonNull;
++import androidx.recyclerview.widget.RecyclerView;
++
++import com.luckyba.myfiledemo.R;
++
++public class PictureHolder extends RecyclerView.ViewHolder{
++
++    public ImageView picture;
++
++    public PictureHolder(@NonNull View itemView) {
++        super(itemView);
++
++        picture = itemView.findViewById(R.id.image);
++    }
++}
++
+Index: app/src/main/java/com/luckyba/myfiledemo/ui/main/viewmodel/AudioViewModel.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/ui/main/viewmodel/AudioViewModel.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/java/com/luckyba/myfiledemo/ui/main/viewmodel/AudioViewModel.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,39 @@
++package com.luckyba.myfiledemo.ui.main.viewmodel;
++
++import android.app.Application;
++import android.os.Environment;
++
++import androidx.lifecycle.AndroidViewModel;
++import androidx.lifecycle.LiveData;
++import androidx.lifecycle.MutableLiveData;
++import androidx.lifecycle.ViewModel;
++
++import com.luckyba.myfiledemo.app.MyFileApplication;
++import com.luckyba.myfiledemo.data.model.DictionaryProvider;
++import com.luckyba.myfiledemo.data.model.InternalStorageFilesModel;
++import com.luckyba.myfiledemo.data.model.MediaFileListModel;
++import com.luckyba.myfiledemo.data.repository.MyFileRepository;
++import com.luckyba.myfiledemo.util.Constants;
++
++import java.util.ArrayList;
++
++public class AudioViewModel extends ViewModel {
++
++
++    private final MutableLiveData<ArrayList<MediaFileListModel>> internal;
++    private MyFileRepository myFileRepository;
++    public AudioViewModel() {
++        super();
++        internal = new MutableLiveData<>();
++        myFileRepository = new MyFileRepository(MyFileApplication.getInstance());
++        internal.setValue(myFileRepository.getAllMedia(Constants.AudioDir));
++    }
++
++    public LiveData<ArrayList<MediaFileListModel>> getInternalData() {
++        return internal;
++    }
++
++    public void setData(DictionaryProvider audioDir) {
++        internal.postValue(myFileRepository.getAllMedia(audioDir));
++    }
++}
+\ No newline at end of file
+Index: app/src/main/java/com/luckyba/myfiledemo/ui/main/viewmodel/DocumentsViewModel.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/ui/main/viewmodel/DocumentsViewModel.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/java/com/luckyba/myfiledemo/ui/main/viewmodel/DocumentsViewModel.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,36 @@
++package com.luckyba.myfiledemo.ui.main.viewmodel;
++
++import android.app.Application;
++import android.os.Environment;
++
++import androidx.lifecycle.AndroidViewModel;
++import androidx.lifecycle.LiveData;
++import androidx.lifecycle.MutableLiveData;
++import androidx.lifecycle.ViewModel;
++
++import com.luckyba.myfiledemo.app.MyFileApplication;
++import com.luckyba.myfiledemo.data.model.InternalStorageFilesModel;
++import com.luckyba.myfiledemo.data.repository.MyFileRepository;
++
++import java.util.ArrayList;
++
++public class DocumentsViewModel extends ViewModel {
++
++
++    private final MutableLiveData<ArrayList<InternalStorageFilesModel>> internal;
++    private MyFileRepository myFileRepository;
++    public DocumentsViewModel() {
++        super();
++        internal = new MutableLiveData<>();
++        myFileRepository = new MyFileRepository(MyFileApplication.getInstance());
++        internal.setValue(myFileRepository.getAllInternalFile(Environment.getExternalStorageDirectory().getAbsolutePath()));
++    }
++
++    public LiveData<ArrayList<InternalStorageFilesModel>> getInternalData() {
++        return internal;
++    }
++
++    public void setData(String path) {
++        internal.postValue(myFileRepository.getAllInternalFile(path));
++    }
++}
+\ No newline at end of file
+Index: app/src/main/java/com/luckyba/myfiledemo/ui/main/viewmodel/DownloadViewModel.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/ui/main/viewmodel/DownloadViewModel.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/java/com/luckyba/myfiledemo/ui/main/viewmodel/DownloadViewModel.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,36 @@
++package com.luckyba.myfiledemo.ui.main.viewmodel;
++
++import android.app.Application;
++import android.os.Environment;
++
++import androidx.lifecycle.AndroidViewModel;
++import androidx.lifecycle.LiveData;
++import androidx.lifecycle.MutableLiveData;
++import androidx.lifecycle.ViewModel;
++
++import com.luckyba.myfiledemo.app.MyFileApplication;
++import com.luckyba.myfiledemo.data.model.InternalStorageFilesModel;
++import com.luckyba.myfiledemo.data.repository.MyFileRepository;
++
++import java.util.ArrayList;
++
++public class DownloadViewModel extends ViewModel {
++
++
++    private final MutableLiveData<ArrayList<InternalStorageFilesModel>> internal;
++    private MyFileRepository myFileRepository;
++    public DownloadViewModel() {
++        super();
++        internal = new MutableLiveData<>();
++        myFileRepository = new MyFileRepository(MyFileApplication.getInstance());
++        internal.setValue(myFileRepository.getAllInternalFile(Environment.getExternalStorageDirectory().getAbsolutePath()));
++    }
++
++    public LiveData<ArrayList<InternalStorageFilesModel>> getInternalData() {
++        return internal;
++    }
++
++    public void setData(String path) {
++        internal.postValue(myFileRepository.getAllInternalFile(path));
++    }
++}
+\ No newline at end of file
+Index: app/src/main/java/com/luckyba/myfiledemo/ui/main/viewmodel/ExternalViewModel.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/ui/main/viewmodel/ExternalViewModel.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/java/com/luckyba/myfiledemo/ui/main/viewmodel/ExternalViewModel.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,36 @@
++package com.luckyba.myfiledemo.ui.main.viewmodel;
++
++import android.app.Application;
++import android.os.Environment;
++
++import androidx.lifecycle.AndroidViewModel;
++import androidx.lifecycle.LiveData;
++import androidx.lifecycle.MutableLiveData;
++import androidx.lifecycle.ViewModel;
++
++import com.luckyba.myfiledemo.app.MyFileApplication;
++import com.luckyba.myfiledemo.data.model.InternalStorageFilesModel;
++import com.luckyba.myfiledemo.data.repository.MyFileRepository;
++
++import java.util.ArrayList;
++
++public class ExternalViewModel extends ViewModel {
++
++
++    private final MutableLiveData<ArrayList<InternalStorageFilesModel>> internal;
++    private MyFileRepository myFileRepository;
++    public ExternalViewModel() {
++        super();
++        internal = new MutableLiveData<>();
++        myFileRepository = new MyFileRepository(MyFileApplication.getInstance());
++        internal.setValue(myFileRepository.getAllInternalFile(Environment.getExternalStorageDirectory().getAbsolutePath()));
++    }
++
++    public LiveData<ArrayList<InternalStorageFilesModel>> getInternalData() {
++        return internal;
++    }
++
++    public void setData(String path) {
++        internal.postValue(myFileRepository.getAllInternalFile(path));
++    }
++}
+\ No newline at end of file
+Index: app/src/main/java/com/luckyba/myfiledemo/ui/main/viewmodel/ImagesViewModel.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/ui/main/viewmodel/ImagesViewModel.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/java/com/luckyba/myfiledemo/ui/main/viewmodel/ImagesViewModel.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,37 @@
++package com.luckyba.myfiledemo.ui.main.viewmodel;
++
++import android.app.Application;
++import android.os.Environment;
++
++import androidx.lifecycle.AndroidViewModel;
++import androidx.lifecycle.LiveData;
++import androidx.lifecycle.MutableLiveData;
++import androidx.lifecycle.ViewModel;
++
++import com.luckyba.myfiledemo.app.MyFileApplication;
++import com.luckyba.myfiledemo.data.model.DictionaryProvider;
++import com.luckyba.myfiledemo.data.model.ImageFolder;
++import com.luckyba.myfiledemo.data.repository.MyFileRepository;
++import com.luckyba.myfiledemo.util.Constants;
++
++import java.util.ArrayList;
++
++public class ImagesViewModel extends ViewModel {
++
++    private final MutableLiveData<ArrayList<ImageFolder>> internal;
++    private MyFileRepository myFileRepository;
++    public ImagesViewModel() {
++        super();
++        internal = new MutableLiveData<>();
++        myFileRepository = new MyFileRepository(MyFileApplication.getInstance());
++        internal.setValue(myFileRepository.getAllFolderPicture(Constants.ImageDir));
++    }
++
++    public LiveData<ArrayList<ImageFolder>> getFolderPictureData() {
++        return internal;
++    }
++
++    public void setData(DictionaryProvider imageDir) {
++        internal.postValue(myFileRepository.getAllFolderPicture(imageDir));
++    }
++}
+\ No newline at end of file
+Index: app/src/main/java/com/luckyba/myfiledemo/ui/main/viewmodel/RecentsViewModel.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/ui/main/viewmodel/RecentsViewModel.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/java/com/luckyba/myfiledemo/ui/main/viewmodel/RecentsViewModel.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,36 @@
++package com.luckyba.myfiledemo.ui.main.viewmodel;
++
++import android.app.Application;
++import android.os.Environment;
++
++import androidx.lifecycle.AndroidViewModel;
++import androidx.lifecycle.LiveData;
++import androidx.lifecycle.MutableLiveData;
++import androidx.lifecycle.ViewModel;
++
++import com.luckyba.myfiledemo.app.MyFileApplication;
++import com.luckyba.myfiledemo.data.model.InternalStorageFilesModel;
++import com.luckyba.myfiledemo.data.repository.MyFileRepository;
++
++import java.util.ArrayList;
++
++public class RecentsViewModel extends ViewModel {
++
++
++    private final MutableLiveData<ArrayList<InternalStorageFilesModel>> internal;
++    private MyFileRepository myFileRepository;
++    public RecentsViewModel() {
++        super();
++        internal = new MutableLiveData<>();
++        myFileRepository = new MyFileRepository(MyFileApplication.getInstance());
++        internal.setValue(myFileRepository.getAllInternalFile(Environment.getExternalStorageDirectory().getAbsolutePath()));
++    }
++
++    public LiveData<ArrayList<InternalStorageFilesModel>> getInternalData() {
++        return internal;
++    }
++
++    public void setData(String path) {
++        internal.postValue(myFileRepository.getAllInternalFile(path));
++    }
++}
+\ No newline at end of file
+Index: app/src/main/java/com/luckyba/myfiledemo/ui/main/viewmodel/VideosViewModel.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/ui/main/viewmodel/VideosViewModel.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/java/com/luckyba/myfiledemo/ui/main/viewmodel/VideosViewModel.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,39 @@
++package com.luckyba.myfiledemo.ui.main.viewmodel;
++
++import android.app.Application;
++import android.os.Environment;
++
++import androidx.lifecycle.AndroidViewModel;
++import androidx.lifecycle.LiveData;
++import androidx.lifecycle.MutableLiveData;
++import androidx.lifecycle.ViewModel;
++
++import com.luckyba.myfiledemo.app.MyFileApplication;
++import com.luckyba.myfiledemo.data.model.DictionaryProvider;
++import com.luckyba.myfiledemo.data.model.InternalStorageFilesModel;
++import com.luckyba.myfiledemo.data.model.MediaFileListModel;
++import com.luckyba.myfiledemo.data.repository.MyFileRepository;
++import com.luckyba.myfiledemo.util.Constants;
++
++import java.util.ArrayList;
++
++public class VideosViewModel extends ViewModel {
++
++
++    private final MutableLiveData<ArrayList<MediaFileListModel>> internal;
++    private MyFileRepository myFileRepository;
++    public VideosViewModel() {
++        super();
++        internal = new MutableLiveData<>();
++        myFileRepository = new MyFileRepository(MyFileApplication.getInstance());
++        internal.setValue(myFileRepository.getAllMedia(Constants.VideoDir));
++    }
++
++    public LiveData<ArrayList<MediaFileListModel>> getInternalData() {
++        return internal;
++    }
++
++    public void setData(DictionaryProvider videoDir) {
++        internal.postValue(myFileRepository.getAllMedia(videoDir));
++    }
++}
+\ No newline at end of file
+Index: app/src/main/java/com/luckyba/myfiledemo/util/AutoFitRecyclerView.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/util/AutoFitRecyclerView.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/java/com/luckyba/myfiledemo/util/AutoFitRecyclerView.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,63 @@
++package com.luckyba.myfiledemo.util;
++
++import android.content.Context;
++import android.content.res.TypedArray;
++import android.util.AttributeSet;
++
++import androidx.recyclerview.widget.GridLayoutManager;
++import androidx.recyclerview.widget.RecyclerView;
++
++public class AutoFitRecyclerView extends RecyclerView {
++
++    private int columnWidth = -1;
++    private GridLayoutManager manager;
++
++
++    public AutoFitRecyclerView(Context context) {
++        super(context);
++        initialize(context, null);
++    }
++
++    public AutoFitRecyclerView(Context context, AttributeSet attrs) {
++        super(context, attrs);
++        initialize(context, attrs);
++    }
++
++    public AutoFitRecyclerView(Context context, AttributeSet attrs, int defStyle) {
++        super(context, attrs, defStyle);
++        initialize(context, attrs);
++    }
++
++
++    /**
++     *
++     * @param context The Activities Context
++     * @param attrs Dimention columnWidth of the RecyclerView
++     */
++    private void initialize(Context context, AttributeSet attrs) {
++        if (attrs != null) {
++            int[] attrsArray = {
++                    android.R.attr.columnWidth
++            };
++            TypedArray array = context.obtainStyledAttributes(attrs, attrsArray);
++            columnWidth = array.getDimensionPixelSize(0, -1);
++            array.recycle();
++        }
++
++        manager = new GridLayoutManager(getContext(), 1);
++        setLayoutManager(manager);
++    }
++
++
++    @Override
++    protected void onMeasure(int widthSpec, int heightSpec) {
++        super.onMeasure(widthSpec, heightSpec);
++        if (columnWidth > 0) {
++            int spanCount = Math.max(1, getMeasuredWidth() / columnWidth);
++            manager.setSpanCount(spanCount);
++        }
++    }
++
++
++}
++
+Index: app/src/main/java/com/luckyba/myfiledemo/util/Constants.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/luckyba/myfiledemo/util/Constants.java	(revision 7b52a715990f8fc0af0cc8820424dd60e107a8f6)
++++ app/src/main/java/com/luckyba/myfiledemo/util/Constants.java	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -1,14 +1,18 @@
+ package com.luckyba.myfiledemo.util;
+ 
+ import android.os.Build;
++import android.provider.MediaStore;
+ 
+ import androidx.annotation.RequiresApi;
+ 
++import com.luckyba.myfiledemo.data.model.DictionaryProvider;
++
+ import java.util.ArrayList;
+ import java.util.Arrays;
+ import java.util.Collections;
+ import java.util.List;
+ 
++@RequiresApi(api = Build.VERSION_CODES.Q)
+ public class Constants {
+     public static final List listAudioType = Collections.unmodifiableList(
+             Arrays.asList("mp3", "wav", "ogg"));
+@@ -25,4 +29,17 @@
+     public static final List listExtractType = Collections.unmodifiableList(
+             Arrays.asList("zip", "rar"));
+ 
+-}
++    public static final DictionaryProvider AudioDir = new DictionaryProvider(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
++            , new String[]{MediaStore.Audio.Media.DISPLAY_NAME, MediaStore.Audio.Media.DATA}, null, null,
++            "LOWER(" + MediaStore.Audio.Media.TITLE + ") ASC");
++
++    public static final DictionaryProvider ImageDir = new DictionaryProvider(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
++            new String[]{MediaStore.Images.Media.DISPLAY_NAME, MediaStore.Images.Media.DATA, MediaStore.Images.Media.BUCKET_DISPLAY_NAME
++                    ,MediaStore.Images.Media.BUCKET_ID}, null, null,
++            "LOWER(" + MediaStore.Images.Media.TITLE + ") ASC");
++
++    public static final DictionaryProvider VideoDir = new DictionaryProvider(MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
++            new String[]{MediaStore.Video.Media.DISPLAY_NAME, MediaStore.Video.Media.DATA}, null, null,
++            "LOWER(" + MediaStore.Video.Media.TITLE + ") ASC");
++
++}
+\ No newline at end of file
+Index: app/src/main/res/anim/zoom_image.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/anim/zoom_image.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/res/anim/zoom_image.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,20 @@
++<?xml version="1.0" encoding="utf-8"?>
++<set xmlns:android="http://schemas.android.com/apk/res/android">
++
++
++    <scale
++        android:fromXScale="0.2"
++        android:fromYScale="0.2"
++        android:pivotX="50%p"
++        android:pivotY="50%p"
++        android:toXScale="1.0"
++        android:toYScale="1.0"
++        android:duration="3000"
++        android:repeatMode="reverse"
++        android:repeatCount="infinite">
++
++
++    </scale>
++
++
++</set>
+\ No newline at end of file
+Index: app/src/main/res/drawable-xxhdpi/line.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/drawable-xxhdpi/line.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/res/drawable-xxhdpi/line.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,12 @@
++<?xml version="1.0" encoding="utf-8"?>
++<shape xmlns:android="http://schemas.android.com/apk/res/android"
++    android:shape="rectangle">
++
++    <solid android:color="@android:color/darker_gray" />
++
++    <padding
++        android:top="5dp"
++        android:left="5dp"
++        android:right="5dp"
++        android:bottom="5dp"/>
++</shape>
+\ No newline at end of file
+Index: app/src/main/res/drawable-xxhdpi/line_drawable.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/drawable-xxhdpi/line_drawable.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/res/drawable-xxhdpi/line_drawable.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,9 @@
++<?xml version="1.0" encoding="utf-8"?>
++<selector xmlns:android="http://schemas.android.com/apk/res/android">
++    <item
++        android:state_pressed="true"
++        android:drawable="@drawable/line"/>
++
++    <item
++        android:drawable="@drawable/line"/>
++</selector>
+\ No newline at end of file
+Index: app/src/main/res/drawable-xxhdpi/thumb.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/drawable-xxhdpi/thumb.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/res/drawable-xxhdpi/thumb.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,17 @@
++<?xml version="1.0" encoding="utf-8"?>
++<shape xmlns:android="http://schemas.android.com/apk/res/android"
++    android:shape="rectangle">
++
++    <corners
++        android:topLeftRadius="44dp"
++        android:topRightRadius="44dp"
++        android:bottomLeftRadius="44dp"
++        android:bottomRightRadius="44dp"/>
++
++    <padding
++        android:paddingLeft="11dp"
++        android:paddingRight="11dp" />
++
++    <solid android:color="@color/txt_blue" />
++
++</shape>
+\ No newline at end of file
+Index: app/src/main/res/drawable-xxhdpi/thumb_drawable.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/drawable-xxhdpi/thumb_drawable.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/res/drawable-xxhdpi/thumb_drawable.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,9 @@
++<?xml version="1.0" encoding="utf-8"?>
++<selector xmlns:android="http://schemas.android.com/apk/res/android">
++    <item
++        android:state_pressed="true"
++        android:drawable="@drawable/thumb"/>
++
++    <item
++        android:drawable="@drawable/thumb"/>
++</selector>
+\ No newline at end of file
+Index: app/src/main/res/drawable/ic_outline_documents__24.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/drawable/ic_outline_documents__24.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/res/drawable/ic_outline_documents__24.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,6 @@
++<vector android:alpha="0.7" android:autoMirrored="true"
++    android:height="24dp" android:tint="#4D4D4D"
++    android:viewportHeight="24" android:viewportWidth="24"
++    android:width="24dp" xmlns:android="http://schemas.android.com/apk/res/android">
++    <path android:fillColor="@android:color/white" android:pathData="M14,2H6c-1.1,0 -1.99,0.9 -1.99,2L4,20c0,1.1 0.89,2 1.99,2H18c1.1,0 2,-0.9 2,-2V8l-6,-6zM6,20V4h7v5h5v11H6z"/>
++</vector>
+Index: app/src/main/res/drawable/ic_outline_recent.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/drawable/ic_outline_recent.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/res/drawable/ic_outline_recent.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,5 @@
++<vector android:alpha="0.7" android:height="24dp" android:tint="#4D4D4D"
++    android:viewportHeight="24" android:viewportWidth="24"
++    android:width="24dp" xmlns:android="http://schemas.android.com/apk/res/android">
++    <path android:fillColor="@android:color/white" android:pathData="M11.99,2C6.47,2 2,6.48 2,12s4.47,10 9.99,10C17.52,22 22,17.52 22,12S17.52,2 11.99,2zM12,20c-4.42,0 -8,-3.58 -8,-8s3.58,-8 8,-8 8,3.58 8,8 -3.58,8 -8,8zM12.5,7L11,7v6l5.25,3.15 0.75,-1.23 -4.5,-2.67z"/>
++</vector>
+Index: app/src/main/res/drawable/ic_outline_sd_storage_24.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/drawable/ic_outline_sd_storage_24.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/res/drawable/ic_outline_sd_storage_24.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,5 @@
++<vector android:alpha="0.7" android:height="24dp" android:tint="#4D4D4D"
++    android:viewportHeight="24" android:viewportWidth="24"
++    android:width="24dp" xmlns:android="http://schemas.android.com/apk/res/android">
++    <path android:fillColor="@android:color/white" android:pathData="M18,4v16L6,20L6,8.83L10.83,4L18,4m0,-2h-8L4,8v12c0,1.1 0.9,2 2,2h12c1.1,0 2,-0.9 2,-2L20,4c0,-1.1 -0.9,-2 -2,-2zM9,7h2v4L9,11zM12,7h2v4h-2zM15,7h2v4h-2z"/>
++</vector>
+Index: app/src/main/res/drawable/ic_outline_video_library_24.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/drawable/ic_outline_video_library_24.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/res/drawable/ic_outline_video_library_24.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,5 @@
++<vector android:alpha="0.7" android:height="24dp" android:tint="#4D4D4D"
++    android:viewportHeight="24" android:viewportWidth="24"
++    android:width="24dp" xmlns:android="http://schemas.android.com/apk/res/android">
++    <path android:fillColor="@android:color/white" android:pathData="M4,6L2,6v14c0,1.1 0.9,2 2,2h14v-2L4,20L4,6zM20,2L8,2c-1.1,0 -2,0.9 -2,2v12c0,1.1 0.9,2 2,2h12c1.1,0 2,-0.9 2,-2L22,4c0,-1.1 -0.9,-2 -2,-2zM20,16L8,16L8,4h12v12zM12,5.5v9l6,-4.5z"/>
++</vector>
+Index: app/src/main/res/layout/activity_image_display.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/layout/activity_image_display.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/res/layout/activity_image_display.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,62 @@
++<?xml version="1.0" encoding="utf-8"?>
++<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:app="http://schemas.android.com/apk/res-auto"
++    xmlns:tools="http://schemas.android.com/tools"
++    android:layout_width="match_parent"
++    android:layout_height="match_parent"
++    android:id="@+id/displayContainer">
++
++    <RelativeLayout
++        android:layout_width="match_parent"
++        android:layout_height="match_parent">
++
++        <androidx.cardview.widget.CardView
++            android:id="@+id/head"
++            android:layout_width="match_parent"
++            android:layout_height="50dp"
++            app:cardBackgroundColor="@color/txt_blue">
++
++            <TextView
++                android:id="@+id/tv_folder_name"
++                android:layout_width="wrap_content"
++                android:layout_height="wrap_content"
++                android:layout_gravity="center|start"
++                android:text="@string/folder_name"
++                android:textColor="@color/white"
++                android:textSize="18sp"
++                android:textStyle="bold"
++                android:layout_marginLeft="10dp"
++                android:layout_marginStart="10dp" />
++
++        </androidx.cardview.widget.CardView>
++
++        <com.luckyba.myfiledemo.util.AutoFitRecyclerView
++            android:layout_below="@id/head"
++            android:id="@+id/recycler"
++            android:layout_width="match_parent"
++            android:layout_height="match_parent"
++            android:background="@color/white"
++            android:columnWidth="@dimen/picture_column_width">
++
++
++            <!--app:fastScrollEnabled="true"
++            app:fastScrollHorizontalThumbDrawable="@drawable/thumb_drawable"
++            app:fastScrollHorizontalTrackDrawable="@drawable/line_drawable"
++            app:fastScrollVerticalThumbDrawable="@drawable/thumb_drawable"
++            app:fastScrollVerticalTrackDrawable="@drawable/line_drawable"-->
++
++        </com.luckyba.myfiledemo.util.AutoFitRecyclerView>
++
++    </RelativeLayout>
++
++
++
++    <ProgressBar
++        android:id="@+id/loader"
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content"
++        android:layout_gravity="center"
++        tools:visibility="gone" />
++
++
++</FrameLayout>
+\ No newline at end of file
+Index: app/src/main/res/layout/fragment_home.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/layout/fragment_home.xml	(revision 7b52a715990f8fc0af0cc8820424dd60e107a8f6)
++++ app/src/main/res/layout/fragment_home.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -42,7 +42,7 @@
+             android:layout_height="wrap_content"
+             android:padding="5dp"
+             android:textColor="@color/color_text_selected"
+-            android:text="@string/no_media_found"
++            android:text="@string/empty"
+             android:textSize="18sp"
+             android:textStyle="bold" />
+     </LinearLayout>
+Index: app/src/main/res/layout/fragment_image.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/layout/fragment_image.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/res/layout/fragment_image.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,79 @@
++<?xml version="1.0" encoding="utf-8"?>
++<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:app="http://schemas.android.com/apk/res-auto"
++    xmlns:tools="http://schemas.android.com/tools"
++    android:layout_width="match_parent"
++    android:layout_height="match_parent"
++    android:orientation="vertical"
++    android:background="@color/black"
++    tools:context=".ui.main.view.MainActivity">
++
++
++    <RelativeLayout
++        android:background="@color/black"
++        android:layout_width="match_parent"
++        android:layout_height="match_parent">
++
++
++        <androidx.cardview.widget.CardView
++            android:id="@+id/head"
++            android:layout_width="match_parent"
++            android:layout_height="100dp"
++            app:cardBackgroundColor="@color/black">
++
++            <TextView
++                android:layout_width="wrap_content"
++                android:layout_height="wrap_content"
++                android:layout_gravity="center|start"
++                android:text="@string/photos_name"
++                android:textColor="@color/white"
++                android:textSize="35sp"
++                android:textStyle="bold"
++                android:layout_marginLeft="20dp"
++                android:layout_marginStart="10dp" />
++
++
++            <ImageButton
++                android:id="@+id/menu"
++                android:layout_width="wrap_content"
++                android:layout_height="wrap_content"
++                android:layout_gravity="end"
++                android:layout_marginTop="10dp"
++                android:layout_marginRight="10dp"
++                android:background="@android:color/transparent"
++                android:tint="@color/white" />
++
++
++        </androidx.cardview.widget.CardView>
++
++        <com.luckyba.myfiledemo.util.AutoFitRecyclerView
++            android:id="@+id/list_folder_media"
++            android:layout_width="match_parent"
++            android:layout_height="match_parent"
++            android:background="@color/black"
++            android:columnWidth="@dimen/folder_column_width"
++            android:clipToPadding="false"
++            android:layout_below="@id/head">
++
++            <!--app:fastScrollEnabled="true"
++       app:fastScrollHorizontalThumbDrawable="@drawable/thumb_drawable"
++       app:fastScrollHorizontalTrackDrawable="@drawable/line_drawable"
++       app:fastScrollVerticalThumbDrawable="@drawable/thumb_drawable"
++       app:fastScrollVerticalTrackDrawable="@drawable/line_drawable"-->
++
++        </com.luckyba.myfiledemo.util.AutoFitRecyclerView>
++
++    </RelativeLayout>
++
++
++    <TextView
++        android:id="@+id/empty"
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content"
++        android:layout_gravity="center"
++        android:text="@string/empty"
++        android:textSize="18sp"
++        android:textStyle="bold"
++        android:visibility="gone" />
++
++</FrameLayout>
+\ No newline at end of file
+Index: app/src/main/res/layout/indicator_holder.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/layout/indicator_holder.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/res/layout/indicator_holder.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,47 @@
++<?xml version="1.0" encoding="utf-8"?>
++<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:app="http://schemas.android.com/apk/res-auto"
++    xmlns:tools="http://schemas.android.com/tools"
++    android:orientation="vertical"
++    android:layout_width="wrap_content"
++    android:layout_height="wrap_content">
++
++    <androidx.cardview.widget.CardView
++        android:id="@+id/indicatorCard"
++        android:layout_width="70dp"
++        android:layout_height="70dp"
++        android:layout_marginLeft=".5dp"
++        android:layout_marginTop=".5dp"
++        android:layout_marginRight=".5dp"
++        android:layout_marginBottom=".5dp"
++        app:cardCornerRadius="2dp"
++        app:cardElevation="0dp">
++
++        <FrameLayout
++            android:layout_width="match_parent"
++            android:layout_height="match_parent">
++
++            <ImageView
++                android:id="@+id/imageIndicator"
++                android:layout_width="match_parent"
++                android:layout_height="match_parent"
++                android:background="@color/cardview_shadow_start_color"
++                android:padding="5dp"
++                android:scaleType="centerCrop"
++                tools:ignore="ContentDescription" />
++
++            <View
++                android:id="@+id/activeImage"
++                android:layout_width="match_parent"
++                android:layout_height="wrap_content"
++                android:background="#8c000000" />
++
++
++        </FrameLayout>
++
++
++    </androidx.cardview.widget.CardView>
++
++
++
++</RelativeLayout>
+\ No newline at end of file
+Index: app/src/main/res/layout/pic_holder_item.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/layout/pic_holder_item.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/res/layout/pic_holder_item.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,33 @@
++<?xml version="1.0" encoding="utf-8"?>
++<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:app="http://schemas.android.com/apk/res-auto"
++    xmlns:tools="http://schemas.android.com/tools"
++    android:layout_width="90dp"
++    android:layout_height="90dp">
++
++    <androidx.cardview.widget.CardView
++        android:layout_width="match_parent"
++        android:layout_height="match_parent"
++        android:layout_marginTop="1dp"
++        android:layout_marginLeft=".5dp"
++        android:layout_marginRight=".5dp"
++        android:layout_marginBottom=".5dp"
++        app:cardCornerRadius="1dp">
++
++        <FrameLayout
++            android:layout_width="match_parent"
++            android:layout_height="match_parent">
++
++            <ImageView
++                android:id="@+id/image"
++                android:layout_width="match_parent"
++                android:layout_height="match_parent"
++                android:scaleType="centerCrop"
++                tools:ignore="ContentDescription" />
++
++        </FrameLayout>
++
++
++    </androidx.cardview.widget.CardView>
++
++</RelativeLayout>
+\ No newline at end of file
+Index: app/src/main/res/layout/picture_browser.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/layout/picture_browser.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/res/layout/picture_browser.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,59 @@
++<?xml version="1.0" encoding="utf-8"?>
++<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:app="http://schemas.android.com/apk/res-auto"
++    android:layout_width="match_parent"
++    android:layout_height="match_parent"
++    android:background="@color/black"
++    android:animateLayoutChanges="true">
++
++  <androidx.cardview.widget.CardView
++      android:layout_width="match_parent"
++      android:layout_height="50dp"
++      app:cardBackgroundColor="@android:color/transparent"
++      android:layout_gravity="top"
++      android:visibility="gone">
++
++    <RelativeLayout
++        android:layout_width="match_parent"
++        android:layout_height="match_parent">
++
++      <androidx.cardview.widget.CardView
++          android:layout_width="wrap_content"
++          android:layout_height="wrap_content"
++          android:background="@android:color/transparent"
++          android:src="@drawable/ic_back_arrow"
++          android:tint="@color/white"
++          android:layout_centerVertical="true"
++          android:layout_alignParentEnd="true"
++          android:layout_alignParentRight="true"
++          android:layout_marginRight="10dp"
++          android:layout_marginEnd="10dp"/>
++
++    </RelativeLayout>
++
++  </androidx.cardview.widget.CardView>
++
++
++  <androidx.viewpager.widget.ViewPager
++      android:id="@+id/imagePager"
++      android:layout_width="match_parent"
++      android:layout_height="match_parent">
++
++  </androidx.viewpager.widget.ViewPager>
++
++  <!--android:scaleType="centerCrop"-->
++
++  <androidx.recyclerview.widget.RecyclerView
++      android:id="@+id/indicatorRecycler"
++      android:layout_width="match_parent"
++      android:layout_height="70dp"
++      android:layout_gravity="bottom"
++      android:layout_marginBottom="10dp"
++      android:clickable="true"
++      android:visibility="gone"
++      android:focusable="true">
++
++  </androidx.recyclerview.widget.RecyclerView>
++
++
++</FrameLayout>
+\ No newline at end of file
+Index: app/src/main/res/layout/picture_browser_pager.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/layout/picture_browser_pager.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/res/layout/picture_browser_pager.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,18 @@
++<?xml version="1.0" encoding="utf-8"?>
++<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    android:layout_width="match_parent"
++    android:layout_height="match_parent"
++    xmlns:app="http://schemas.android.com/apk/res-auto"
++    xmlns:tools="http://schemas.android.com/tools">
++
++    <ImageView
++        android:layout_width="match_parent"
++        android:layout_height="match_parent"
++        android:id="@+id/image" />
++
++
++    <!--android:transitionName="picture"
++    tools:ignore="ContentDescription,UnusedAttribute"-->
++
++
++</RelativeLayout>
+\ No newline at end of file
+Index: app/src/main/res/layout/picture_folder_item.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/layout/picture_folder_item.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
++++ app/src/main/res/layout/picture_folder_item.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -0,0 +1,58 @@
++<?xml version="1.0" encoding="utf-8"?>
++<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:app="http://schemas.android.com/apk/res-auto"
++    android:layout_width="wrap_content"
++    android:layout_height="wrap_content"
++    android:layout_marginLeft="1dp"
++    android:layout_marginEnd="1dp"
++    android:layout_marginRight=".5dp"
++    android:layout_marginStart="1dp">
++
++
++    <androidx.cardview.widget.CardView
++        android:id="@+id/folderCard"
++        android:layout_width="120dp"
++        android:layout_height="130dp"
++        android:layout_marginTop="1dp"
++        app:cardCornerRadius="1dp">
++
++        <LinearLayout
++            android:layout_width="match_parent"
++            android:background="@color/black"
++            android:layout_height="match_parent"
++            android:orientation="vertical">
++
++            <ImageView
++                android:id="@+id/folderPic"
++                android:layout_width="match_parent"
++                android:layout_height="0dp"
++                android:layout_weight="8" />
++
++            <TextView
++                android:id="@+id/folderName"
++                android:layout_width="match_parent"
++                android:layout_height="0dp"
++                android:layout_weight="2"
++                android:ellipsize="end"
++                android:gravity="center"
++                android:maxLines="1"
++                android:text="folder name"
++                android:textColor="@color/white"
++                android:textSize="15sp" />
++
++            <TextView
++                android:id="@+id/folderSize"
++                android:layout_width="match_parent"
++                android:layout_height="0dp"
++                android:layout_weight="2"
++                android:ellipsize="end"
++                android:gravity="center"
++                android:maxLines="1"
++                android:text="folder name"
++                android:textColor="@color/white"
++                android:textSize="15sp" />
++
++        </LinearLayout>
++    </androidx.cardview.widget.CardView>
++
++</RelativeLayout>
+\ No newline at end of file
+Index: app/src/main/res/menu/activity_main_drawer.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/menu/activity_main_drawer.xml	(revision 7b52a715990f8fc0af0cc8820424dd60e107a8f6)
++++ app/src/main/res/menu/activity_main_drawer.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -5,16 +5,39 @@
+ 
+     <group android:checkableBehavior="single">
+         <item
+-            android:id="@+id/nav_home"
+-            android:icon="@drawable/ic_home"
+-            android:title="@string/menu_home" />
++            android:id="@+id/nav_recent"
++            android:icon="@drawable/ic_outline_recent"
++            android:title="@string/menu_recent"/>
+         <item
+             android:id="@+id/nav_gallery"
+             android:icon="@drawable/ic_outline_photo_library_24"
+-            android:title="@string/menu_gallery" />
++            android:title="@string/menu_images" />
++        <item
++            android:id="@+id/nav_videos"
++            android:icon="@drawable/ic_outline_video_library_24"
++            android:title="@string/menu_videos" />
++        <item
++            android:id="@+id/nav_audios"
++            android:icon="@drawable/ic_outline_audiotrack_24"
++            android:title="@string/menu_audio" />
+         <item
+-            android:id="@+id/nav_slideshow"
+-            android:icon="@drawable/ic_menu_slideshow"
+-            android:title="@string/menu_slideshow" />
++            android:id="@+id/nav_documents"
++            android:icon="@drawable/ic_outline_delete_outline_24"
++            android:title="@string/menu_documents" />
++        <item
++            android:id="@+id/nav_downloads"
++            android:icon="@drawable/ic_outline_file_download_24"
++            android:title="@string/menu_download" />
++    </group>
++
++    <group>
++        <item
++            android:id="@+id/nav_internal_storage"
++            android:icon="@drawable/ic_home"
++            android:title="@string/menu_internal_storage" />
++        <item
++            android:id="@+id/nav_external_storage"
++            android:icon="@drawable/ic_outline_sd_storage_24"
++            android:title="@string/menu_external_storage" />
+     </group>
+ </menu>
+\ No newline at end of file
+Index: app/src/main/res/navigation/mobile_navigation.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/navigation/mobile_navigation.xml	(revision 7b52a715990f8fc0af0cc8820424dd60e107a8f6)
++++ app/src/main/res/navigation/mobile_navigation.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -5,6 +5,36 @@
+     android:id="@+id/mobile_navigation"
+     app:startDestination="@+id/nav_home">
+ 
++    <fragment
++        android:id="@+id/nav_recent"
++        android:name="com.luckyba.myfiledemo.ui.main.view.HomeFragment"
++        android:label="@string/menu_recent"
++        tools:layout="@layout/fragment_home" />
++
++    <fragment
++        android:id="@+id/nav_gallery"
++        android:name="com.luckyba.myfiledemo.ui.main.view.ImagesFragment"
++        android:label="@string/menu_images"
++        tools:layout="@layout/fragment_home" />
++
++    <fragment
++        android:id="@+id/nav_videos"
++        android:name="com.luckyba.myfiledemo.ui.main.view.VideosFragment"
++        android:label="@string/menu_videos"
++        tools:layout="@layout/fragment_home" />
++
++    <fragment
++        android:id="@+id/nav_audios"
++        android:name="com.luckyba.myfiledemo.ui.main.view.AudioFragment"
++        android:label="@string/menu_audio"
++        tools:layout="@layout/fragment_home" />
++
++    <fragment
++        android:id="@+id/nav_documents"
++        android:name="com.luckyba.myfiledemo.ui.main.view.DocumentsFragment"
++        android:label="@string/menu_documents"
++        tools:layout="@layout/fragment_home" />
++
+     <fragment
+         android:id="@+id/nav_home"
+         android:name="com.luckyba.myfiledemo.ui.main.view.HomeFragment"
+@@ -12,14 +42,14 @@
+         tools:layout="@layout/fragment_home" />
+ 
+     <fragment
+-        android:id="@+id/nav_gallery"
+-        android:name="com.luckyba.myfiledemo.ui.main.view.GalleryFragment"
+-        android:label="@string/menu_gallery"
+-        tools:layout="@layout/fragment_gallery" />
++        android:id="@+id/nav_downloads"
++        android:name="com.luckyba.myfiledemo.ui.main.view.DownloadsFragment"
++        android:label="@string/menu_download"
++        tools:layout="@layout/fragment_home" />
+ 
+     <fragment
+-        android:id="@+id/nav_slideshow"
+-        android:name="com.luckyba.myfiledemo.ui.main.view.SlideshowFragment"
+-        android:label="@string/menu_slideshow"
+-        tools:layout="@layout/fragment_slideshow" />
++        android:id="@+id/nav_internal_storage"
++        android:name="com.luckyba.myfiledemo.ui.main.view.HomeFragment"
++        android:label="@string/menu_internal_storage"
++        tools:layout="@layout/fragment_home" />
+ </navigation>
+\ No newline at end of file
+Index: app/src/main/res/values/dimens.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/values/dimens.xml	(revision 7b52a715990f8fc0af0cc8820424dd60e107a8f6)
++++ app/src/main/res/values/dimens.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -5,4 +5,13 @@
+     <dimen name="nav_header_vertical_spacing">8dp</dimen>
+     <dimen name="nav_header_height">176dp</dimen>
+     <dimen name="fab_margin">16dp</dimen>
++
++
++<!--    Add for recycleview picture-->
++    <dimen name="item_margin">1dp</dimen>
++    <dimen name="item_margin_half">1dp</dimen>
++    <dimen name="folder_column_width">120dp</dimen>
++    <dimen name="picture_column_width">90dp</dimen>
++
++
+ </resources>
+\ No newline at end of file
+Index: app/src/main/res/values/strings.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/values/strings.xml	(revision 7b52a715990f8fc0af0cc8820424dd60e107a8f6)
++++ app/src/main/res/values/strings.xml	(revision 404ce0a2a0c82c88b489ce8353b229a07e646263)
+@@ -10,7 +10,7 @@
+     <string name="menu_home">Home</string>
+     <string name="menu_gallery">Gallery</string>
+     <string name="menu_slideshow">Slideshow</string>
+-    <string name="no_media_found">Empty</string>
++    <string name="empty">Empty</string>
+     <string name="btn_cancel">Cancel</string>
+     <string name="copy">Copy</string>
+     <string name="lbl_move">Move</string>
+@@ -26,4 +26,14 @@
+     <string name="extract">Extract</string>
+     <string name="bnt_ok">Ok</string>
+     <string name="do_you_want_to_extract">"Do you want to extract %1$s ?"</string>
++    <string name="menu_recent">Recent</string>
++    <string name="menu_images">Images</string>
++    <string name="menu_videos">Videos</string>
++    <string name="menu_audio">Audio</string>
++    <string name="menu_documents">Documents</string>
++    <string name="menu_download">Downloads</string>
++    <string name="menu_internal_storage">Internal Storage</string>
++    <string name="menu_external_storage">External Storage</string>
++    <string name="folder_name">Folder Name</string>
++    <string name="photos_name">Photo Name</string>
+ </resources>
+\ No newline at end of file
+diff --git app/src/main/res/drawable-hdpi/ic_menu_external_storage.png app/src/main/res/drawable-hdpi/ic_menu_external_storage.png
+deleted file mode 100644
+index 83d50c07d66319c25c193b9c1473f36880440a36..0000000000000000000000000000000000000000
+GIT binary patch
+literal 0
+Hc$@<O00001
+
+diff --git app/src/main/res/drawable-hdpi/ic_menu_internal_storage.png app/src/main/res/drawable-hdpi/ic_menu_internal_storage.png
+deleted file mode 100644
+index be586ebd1a2877c85efe6ca4cf8836a1ba2d1b74..0000000000000000000000000000000000000000
+GIT binary patch
+literal 0
+Hc$@<O00001
+
+diff --git app/src/main/res/drawable-hdpi/ic_menu_videos.png app/src/main/res/drawable-hdpi/ic_menu_videos.png
+deleted file mode 100644
+index 9a3e1acd69526fc0b361e8f8cb54f95ab7772e28..0000000000000000000000000000000000000000
+GIT binary patch
+literal 0
+Hc$@<O00001
+
+diff --git app/src/main/res/drawable-mdpi/ic_menu_external_storage.png app/src/main/res/drawable-mdpi/ic_menu_external_storage.png
+deleted file mode 100644
+index af2e1d7251e4ba7dd356621e1fd4ba076eb0f597..0000000000000000000000000000000000000000
+GIT binary patch
+literal 0
+Hc$@<O00001
+
+diff --git app/src/main/res/drawable-mdpi/ic_menu_internal_storage.png app/src/main/res/drawable-mdpi/ic_menu_internal_storage.png
+deleted file mode 100644
+index 033a9cd525f6bbb12c1d60e96e40a8266fedac56..0000000000000000000000000000000000000000
+GIT binary patch
+literal 0
+Hc$@<O00001
+
+diff --git app/src/main/res/drawable-mdpi/ic_menu_videos.png app/src/main/res/drawable-mdpi/ic_menu_videos.png
+deleted file mode 100644
+index 092aab751f14462facc91a6ded6babb1bdd2535b..0000000000000000000000000000000000000000
+GIT binary patch
+literal 0
+Hc$@<O00001
+
+diff --git app/src/main/res/drawable-xhdpi/ic_menu_external_storage.png app/src/main/res/drawable-xhdpi/ic_menu_external_storage.png
+deleted file mode 100644
+index a08319e6bd11bacca87c1a215ce2d9b51665fdda..0000000000000000000000000000000000000000
+GIT binary patch
+literal 0
+Hc$@<O00001
+
+diff --git app/src/main/res/drawable-xhdpi/ic_menu_internal_storage.png app/src/main/res/drawable-xhdpi/ic_menu_internal_storage.png
+deleted file mode 100644
+index 6cbcd72ac2a1a0f8593ab323788aa4d663928d66..0000000000000000000000000000000000000000
+GIT binary patch
+literal 0
+Hc$@<O00001
+
+diff --git app/src/main/res/drawable-xhdpi/ic_menu_videos.png app/src/main/res/drawable-xhdpi/ic_menu_videos.png
+deleted file mode 100644
+index 21d98ef03a587c0f0d0ded8e3a98ccbeac766bb1..0000000000000000000000000000000000000000
+GIT binary patch
+literal 0
+Hc$@<O00001
+
+diff --git app/src/main/res/drawable-xxhdpi/ic_menu_external_storage.png app/src/main/res/drawable-xxhdpi/ic_menu_external_storage.png
+deleted file mode 100644
+index 6a88c3059f82c3c32d32d608be889812d154dbca..0000000000000000000000000000000000000000
+GIT binary patch
+literal 0
+Hc$@<O00001
+
+diff --git app/src/main/res/drawable-xxhdpi/ic_menu_internal_storage.png app/src/main/res/drawable-xxhdpi/ic_menu_internal_storage.png
+deleted file mode 100644
+index 61be5fb485a83757987c3d25d384049c96f42b4d..0000000000000000000000000000000000000000
+GIT binary patch
+literal 0
+Hc$@<O00001
+
+diff --git app/src/main/res/drawable-xxhdpi/ic_menu_videos.png app/src/main/res/drawable-xxhdpi/ic_menu_videos.png
+deleted file mode 100644
+index 725a866259d0788da518914597a18cb49fcb24e2..0000000000000000000000000000000000000000
+GIT binary patch
+literal 0
+Hc$@<O00001
+
+diff --git app/src/main/res/drawable-xxxhdpi/ic_menu_external_storage.png app/src/main/res/drawable-xxxhdpi/ic_menu_external_storage.png
+deleted file mode 100644
+index e56bad3c814611578b002c0f3fdcbac6d6207ac4..0000000000000000000000000000000000000000
+GIT binary patch
+literal 0
+Hc$@<O00001
+
+diff --git app/src/main/res/drawable-xxxhdpi/ic_menu_internal_storage.png app/src/main/res/drawable-xxxhdpi/ic_menu_internal_storage.png
+deleted file mode 100644
+index d1022f0fbf237b689c58ae3406715f2722d8c8ef..0000000000000000000000000000000000000000
+GIT binary patch
+literal 0
+Hc$@<O00001
+
+diff --git app/src/main/res/drawable-xxxhdpi/ic_menu_videos.png app/src/main/res/drawable-xxxhdpi/ic_menu_videos.png
+deleted file mode 100644
+index 51c97c374ee48d27d9c3c2949dbbafe30d4932e0..0000000000000000000000000000000000000000
+GIT binary patch
+literal 0
+Hc$@<O00001
+
