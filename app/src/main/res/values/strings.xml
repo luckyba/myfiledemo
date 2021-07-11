@@ -10,7 +10,7 @@
     <string name="menu_home">Home</string>
     <string name="menu_gallery">Gallery</string>
     <string name="menu_slideshow">Slideshow</string>
-    <string name="no_media_found">Empty</string>
+    <string name="empty">Empty</string>
     <string name="btn_cancel">Cancel</string>
     <string name="copy">Copy</string>
     <string name="lbl_move">Move</string>
@@ -26,4 +26,14 @@
     <string name="extract">Extract</string>
     <string name="bnt_ok">Ok</string>
     <string name="do_you_want_to_extract">"Do you want to extract %1$s ?"</string>
+    <string name="menu_recent">Recent</string>
+    <string name="menu_images">Images</string>
+    <string name="menu_videos">Videos</string>
+    <string name="menu_audio">Audio</string>
+    <string name="menu_documents">Documents</string>
+    <string name="menu_download">Downloads</string>
+    <string name="menu_internal_storage">Internal Storage</string>
+    <string name="menu_external_storage">External Storage</string>
+    <string name="folder_name">Folder Name</string>
+    <string name="photos_name">Photo Name</string>
 </resources>

@@ -1,22 +1,11 @@
 package com.luckyba.myfiledemo.ui.main.view.container;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Environment;
-import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -24,18 +13,15 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.luckyba.myfiledemo.R;
 import com.luckyba.myfiledemo.app.MyFileApplication;
 import com.luckyba.myfiledemo.data.model.InternalStorageFilesModel;
-import com.luckyba.myfiledemo.ui.main.view.activities.FullImageViewActivity;
-import com.luckyba.myfiledemo.ui.main.view.activities.TextFileViewActivity;
 import com.luckyba.myfiledemo.ui.main.view.adapter.InternalStorageAdapter;
-import com.luckyba.myfiledemo.ui.main.view.viewholder.Listener;
+import com.luckyba.myfiledemo.ui.main.view.viewholder.CommonListener;
 import com.luckyba.myfiledemo.ui.main.viewmodel.HomeViewModel;
 import com.luckyba.myfiledemo.util.Constants;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.List;
 
-public class InternalStorageContainer implements Listener {
+public class InternalStorageContainer implements CommonListener {
 
     private static String TAG = "InternalStorageContainer";
     private View mContainer;
@@ -108,7 +94,6 @@ public class InternalStorageContainer implements Listener {
         Context context = mContainer.getContext();
         if (file.isDirectory()) {//check if selected item is directory
             if (file.canRead()) {//if directory is readable
-                mAdapter.setData(null);
                 arrayListFilePaths.add(filePath);
                 getFilesList(filePath);
                 mHomeViewModel.setData(filePath);

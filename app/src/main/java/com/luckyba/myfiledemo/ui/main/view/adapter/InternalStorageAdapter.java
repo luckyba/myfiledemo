@@ -13,23 +13,22 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.luckyba.myfiledemo.R;
 import com.luckyba.myfiledemo.data.model.InternalStorageFilesModel;
-import com.luckyba.myfiledemo.ui.main.view.MainActivity;
 import com.luckyba.myfiledemo.ui.main.view.viewholder.CommonViewHolder;
-import com.luckyba.myfiledemo.ui.main.view.viewholder.Listener;
+import com.luckyba.myfiledemo.ui.main.view.viewholder.CommonListener;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 public class InternalStorageAdapter extends RecyclerView.Adapter<CommonViewHolder> {
-    ArrayList<InternalStorageFilesModel> mListData;
-    Listener mListener;
+    ArrayList<InternalStorageFilesModel> mListData = new ArrayList<>();
+    CommonListener mCommonListener;
     public InternalStorageAdapter() {
         super();
     }
 
-    public void setListener (Listener listener) {
-        mListener = listener;
+    public void setListener (CommonListener commonListener) {
+        mCommonListener = commonListener;
     }
 
     @Override
@@ -54,8 +53,9 @@ public class InternalStorageAdapter extends RecyclerView.Adapter<CommonViewHolde
     @Override
     public void onBindViewHolder(@NonNull CommonViewHolder holder, int position) {
 
-        holder.itemView.setOnClickListener(v->mListener.onclick(v, position));
-        holder.itemView.setOnLongClickListener(v -> {mListener.onLongClick(v, position); return false;});
+        holder.itemView.setOnClickListener(v-> mCommonListener.onclick(v, position));
+        holder.itemView.setOnLongClickListener(v -> {
+            mCommonListener.onLongClick(v, position); return false;});
 
         InternalStorageFilesModel data = mListData.get(position);
         holder.nameItem.setText(data.getFileName());
@@ -107,6 +107,7 @@ public class InternalStorageAdapter extends RecyclerView.Adapter<CommonViewHolde
     }
 
     public void setData(ArrayList<InternalStorageFilesModel> data) {
+        mListData.clear();
         mListData = data;
     }
 

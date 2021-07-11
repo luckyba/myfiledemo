@@ -2,7 +2,7 @@ package com.luckyba.myfiledemo.ui.main.view.viewholder;
 
 import android.view.View;
 
-public interface Listener {
+public interface CommonListener {
 
     void onclick (View view, int pos);
 

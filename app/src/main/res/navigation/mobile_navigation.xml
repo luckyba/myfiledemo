@@ -6,20 +6,50 @@
     app:startDestination="@+id/nav_home">
 
     <fragment
+        android:id="@+id/nav_recent"
+        android:name="com.luckyba.myfiledemo.ui.main.view.HomeFragment"
+        android:label="@string/menu_recent"
+        tools:layout="@layout/fragment_home" />
+
+    <fragment
+        android:id="@+id/nav_gallery"
+        android:name="com.luckyba.myfiledemo.ui.main.view.ImagesFragment"
+        android:label="@string/menu_images"
+        tools:layout="@layout/fragment_home" />
+
+    <fragment
+        android:id="@+id/nav_videos"
+        android:name="com.luckyba.myfiledemo.ui.main.view.VideosFragment"
+        android:label="@string/menu_videos"
+        tools:layout="@layout/fragment_home" />
+
+    <fragment
+        android:id="@+id/nav_audios"
+        android:name="com.luckyba.myfiledemo.ui.main.view.AudioFragment"
+        android:label="@string/menu_audio"
+        tools:layout="@layout/fragment_home" />
+
+    <fragment
+        android:id="@+id/nav_documents"
+        android:name="com.luckyba.myfiledemo.ui.main.view.DocumentsFragment"
+        android:label="@string/menu_documents"
+        tools:layout="@layout/fragment_home" />
+
+    <fragment
         android:id="@+id/nav_home"
         android:name="com.luckyba.myfiledemo.ui.main.view.HomeFragment"
         android:label="@string/menu_home"
         tools:layout="@layout/fragment_home" />
 
     <fragment
-        android:id="@+id/nav_gallery"
-        android:name="com.luckyba.myfiledemo.ui.main.view.GalleryFragment"
-        android:label="@string/menu_gallery"
-        tools:layout="@layout/fragment_gallery" />
+        android:id="@+id/nav_downloads"
+        android:name="com.luckyba.myfiledemo.ui.main.view.DownloadsFragment"
+        android:label="@string/menu_download"
+        tools:layout="@layout/fragment_home" />
 
     <fragment
-        android:id="@+id/nav_slideshow"
-        android:name="com.luckyba.myfiledemo.ui.main.view.SlideshowFragment"
-        android:label="@string/menu_slideshow"
-        tools:layout="@layout/fragment_slideshow" />
+        android:id="@+id/nav_internal_storage"
+        android:name="com.luckyba.myfiledemo.ui.main.view.HomeFragment"
+        android:label="@string/menu_internal_storage"
+        tools:layout="@layout/fragment_home" />
 </navigation>
